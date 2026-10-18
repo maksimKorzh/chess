@@ -2,26 +2,25 @@
 
 /*
 
-    ==========================
-          Piece Encoding
-    ==========================
+    ===============================
+            Piece Encoding
+    ===============================
 
-          color  type   Dec
-
-    K       0     001    1
-    P       0     010    2
-    N       0     011    3
-    B       0     100    4
-    R       0     101    5
-    Q       0     110    6
+          Black  White   type   Dec
     
-    k       1     001    9
-    p       1     010    10
-    n       1     011    11
-    b       1     100    12
-    r       1     101    13
-    q       1     110    14
+    K       0      1     001    9
+    P       0      1     010    10
+    N       0      1     011    11
+    B       0      1     100    12
+    R       0      1     101    13
+    Q       0      1     110    14
 
+    k       1      0     001    17
+    p       1      0     010    18
+    n       1      0     011    19
+    b       1      0     100    20
+    r       1      0     101    21
+    q       1      0     110    22
     
 */
 
@@ -35,37 +34,49 @@ var rules = [
 
 // Find best move
 function search(side) {
-    let src = 0; do {
+    for (let src = 0; src < 120; src++) {
         let pce = board[src];
-        if (!pce || !((pce >> 3) == side) || src & 0x88) continue;
-        console.log(src, pce);
-    } while (++src <= 121);
+        if (!(pce & side) || (src & 0x88)) continue;
+        let pceType = pce & 7;
+        for (let dir of rules[pceType]) {
+            let dst = src + dir;
+            while (!(dst & 0x88)) {
+                let capPce = board[dst];
+                if (capPce & side) break;
+
+                document.getElementById(dst).innerHTML = "x";
+                
+                if (capPce & (24 - side)) break;
+                if (!(pceType & 4)) break;
+                dst += dir;
+            }
+        }
+    }
 }
 
 // New game
 function reset() {
     board.fill(0);
     let i = 8; while (i--) {
-        board[i] = (board[i+112] = [5, 3, 4, 6, 1, 4, 3, 5][i])+8;
-        board[i+96] = 2;
-        board[i+16] = 10;
-        
+        board[i] = (board[i+112] = [13, 11, 12, 14, 9, 12, 11, 13][i])+8;
+        board[i+96] = 10;
+        board[i+16] = 18;
     }
 }
 
 // Draw pieces
 function draw() {
-    let i =- 1; while (++i < 121) {
+    for (let i = 0; i < 120; i++) {
         if (i & 0x88) continue;
         q=document.getElementById(i);
-        q.innerHTML = " \u2654\u2659\u2658\u2657\u2656\u2655--\u265a\u265f\u265e\u265d\u265c\u265b"[board[i]];
+        q.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[i]&15];
     }
 }
 
 // Draw board
 (function init() {
     let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
-    let ui = ""; let i = -1; while (++i < 121) 
+    let ui = ""; for (let i = 0; i < 120; i++)
     ui += i & 8 && (i += 7) ? `<tr>` :`<th id="${i}"
     onclick="alert(this.id + ', ' + board[this.id])"
     style="
@@ -87,8 +98,8 @@ reset();
 /*board.fill(0);
 board[52] = 6;
 board[52+32] = 5+8;
-board[52+32+2] = 3;*/
+board[52+32+2] = 2;*/
 
 draw();
-search(1);
+search(16);
 </script>
