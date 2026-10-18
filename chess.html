@@ -1,0 +1,71 @@
+<script>
+var board = new Array(128);
+
+/*
+
+          =========================
+               Piece Encoding
+          =========================
+    
+          K Q R B N P  Slide  Color   Dec
+
+    wP    0 0 0 0 0 1    1      0      6
+    wN    0 0 0 0 1 0    0      0      8
+    wB    0 0 0 1 0 0    1      0      18
+    wR    0 0 1 0 0 0    1      0      34
+    wQ    0 1 0 0 0 0    1      0      66
+    wK    1 0 0 0 0 0    0      0      128
+    
+    bP    0 0 0 0 0 1    1      1      7
+    bN    0 0 0 0 1 0    0      1      9
+    bB    0 0 0 1 0 0    1      1      19
+    bR    0 0 1 0 0 0    1      1      35
+    bQ    0 1 0 0 0 0    1      1      67
+    bK    1 0 0 0 0 0    0      1      129
+
+*/
+
+// New game
+function reset() {
+    board.fill(0);
+    let i = 8; while (i--) {
+        board[i+112] = (board[i] = [35, 9, 19, 67,129, 19, 9, 35][i])-1;
+        board[i+16] = 7;
+        board[i+96] = 6;
+    }
+}
+
+// Draw pieces
+function draw() {
+    let i =- 1; while (++i < 121) {
+        if (i&0x88) continue;
+        q=document.getElementById(i);
+        q.innerHTML = {
+            "0": "\xa0",
+            "6": "\u2659", "8": "\u2658", "18": "\u2657", "34": "\u2656", "66": "\u2655", "128": "\u2654",
+            "7": "\u265f", "9": "\u265e", "19": "\u265d", "35": "\u265c", "67": "\u265b", "129": "\u265a",
+        }[board[i]];
+    }
+}
+
+// Draw board
+let ui = ""; let i = -1; while (++i < 121) 
+    ui += i&8 && (i+=7) ? `<tr>` :`<th id="${i}"
+    onclick="alert(this.id)"
+    style="
+        background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
+        font-size: 8vw;
+        width: calc(${(Math.floor(Math.min(window.innerWidth, window.innerHeight)/8))-2}px);
+        height: calc(${(Math.floor(Math.min(window.innerWidth, window.innerHeight)/8))-2}px);
+    ">`; document.write(`
+    <meta name="viewport" content="user-scalable=no">
+    <table style="
+        cursor:default;
+        border-spacing: 0px;
+        display: grid;
+        place-items: center;
+    ">${ui}</table>`);
+
+reset();
+draw();
+</script>
