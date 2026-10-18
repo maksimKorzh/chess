@@ -1,71 +1,94 @@
 <script>
-var board = new Array(128);
 
 /*
 
-          =========================
-               Piece Encoding
-          =========================
-    
-          K Q R B N P  Slide  Color   Dec
+    ==========================
+          Piece Encoding
+    ==========================
 
-    wP    0 0 0 0 0 1    1      0      6
-    wN    0 0 0 0 1 0    0      0      8
-    wB    0 0 0 1 0 0    1      0      18
-    wR    0 0 1 0 0 0    1      0      34
-    wQ    0 1 0 0 0 0    1      0      66
-    wK    1 0 0 0 0 0    0      0      128
-    
-    bP    0 0 0 0 0 1    1      1      7
-    bN    0 0 0 0 1 0    0      1      9
-    bB    0 0 0 1 0 0    1      1      19
-    bR    0 0 1 0 0 0    1      1      35
-    bQ    0 1 0 0 0 0    1      1      67
-    bK    1 0 0 0 0 0    0      1      129
+          color  type   Dec
 
+    K       0     001    1
+    P       0     010    2
+    N       0     011    3
+    B       0     100    4
+    R       0     101    5
+    Q       0     110    6
+    
+    k       1     001    9
+    p       1     010    10
+    n       1     011    11
+    b       1     100    12
+    r       1     101    13
+    q       1     110    14
+
+    
 */
+
+var board = new Array(128);
+var rules = [
+    [ 0 ], [ -16, -1, 16, 1, -17, -15, 17, 15 ],
+    [ 0 ], [ -33, -31, 33, 31, -18, -14, 18, 14 ],
+    [ -17, -15, 17, 15], [-16, -1, 16, 1 ],
+    [ -16, -1, 16, 1, -17, -15, 17, 15 ]
+];
+
+// Find best move
+function search(side) {
+    let src = 0; do {
+        let pce = board[src];
+        if (!pce || !((pce >> 3) == side) || src & 0x88) continue;
+        console.log(src, pce);
+    } while (++src <= 121);
+}
 
 // New game
 function reset() {
     board.fill(0);
     let i = 8; while (i--) {
-        board[i+112] = (board[i] = [35, 9, 19, 67,129, 19, 9, 35][i])-1;
-        board[i+16] = 7;
-        board[i+96] = 6;
+        board[i] = (board[i+112] = [5, 3, 4, 6, 1, 4, 3, 5][i])+8;
+        board[i+96] = 2;
+        board[i+16] = 10;
+        
     }
 }
 
 // Draw pieces
 function draw() {
     let i =- 1; while (++i < 121) {
-        if (i&0x88) continue;
+        if (i & 0x88) continue;
         q=document.getElementById(i);
-        q.innerHTML = {
-            "0": "\xa0",
-            "6": "\u2659", "8": "\u2658", "18": "\u2657", "34": "\u2656", "66": "\u2655", "128": "\u2654",
-            "7": "\u265f", "9": "\u265e", "19": "\u265d", "35": "\u265c", "67": "\u265b", "129": "\u265a",
-        }[board[i]];
+        q.innerHTML = " \u2654\u2659\u2658\u2657\u2656\u2655--\u265a\u265f\u265e\u265d\u265c\u265b"[board[i]];
     }
 }
 
 // Draw board
-let ui = ""; let i = -1; while (++i < 121) 
-    ui += i&8 && (i+=7) ? `<tr>` :`<th id="${i}"
-    onclick="alert(this.id)"
+(function init() {
+    let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
+    let ui = ""; let i = -1; while (++i < 121) 
+    ui += i & 8 && (i += 7) ? `<tr>` :`<th id="${i}"
+    onclick="alert(this.id + ', ' + board[this.id])"
     style="
         background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
-        font-size: 8vw;
-        width: calc(${(Math.floor(Math.min(window.innerWidth, window.innerHeight)/8))-2}px);
-        height: calc(${(Math.floor(Math.min(window.innerWidth, window.innerHeight)/8))-2}px);
+        width: ${size}px;
+        height: ${size}px;
     ">`; document.write(`
     <meta name="viewport" content="user-scalable=no">
     <table style="
+        font-size: ${size-40}px;
         cursor:default;
         border-spacing: 0px;
         display: grid;
         place-items: center;
     ">${ui}</table>`);
+})()
 
 reset();
+/*board.fill(0);
+board[52] = 6;
+board[52+32] = 5+8;
+board[52+32+2] = 3;*/
+
 draw();
+search(1);
 </script>
