@@ -24,7 +24,7 @@
     
 */
 
-var board = new Array(128); side = 8;
+var board = new Array(128), side = 8; 
 var rules = [
     [ 0 ], [ -16, -1, 16, 1, -17, -15, 17, 15 ],
     [ 15, 16, 17 ], [ -33, -31, 33, 31, -18, -14, 18, 14 ],
@@ -38,8 +38,11 @@ var lock = 0;
 var uSRC = -1;
 var uDST = -1;
 
+var ply = 0;
+
 // Find best move
-function search(list, uSrc, uDst) {
+function search(depth, list, uSrc, uDst) {
+    if (!depth) return 0;
     if (list) moves = [];
     for (let src = 0; src < 120; src++) {
         let pce = board[src];
@@ -56,6 +59,7 @@ function search(list, uSrc, uDst) {
                     if (!(dir & 7) && capPce) break;
                     if ((dir & 7) && !capPce) break;
                 }
+                if ((capPce & 7) == 1) return 10000 - ply;
                 
                 if (list) moves.push([src, dst]);
                 
@@ -71,8 +75,10 @@ function search(list, uSrc, uDst) {
                     return 0;
                 }
                 
-                //document.getElementById(dst).innerHTML = "x";
                 
+                ply++;
+                search(depth-1, list, uSrc, uDst);
+                ply--;
                 
                 
                 board[dst] = 0;
@@ -129,7 +135,8 @@ function uClick(sq) {//console.log("lock:", lock)
     if (!lock) {
         unhighlight();
         
-        search(1, -1, -1);
+        search(1, 1, -1, -1);
+        
         
         for (let i = 0; i < moves.length; i++) {
             if (sq == moves[i][0]) {
@@ -141,7 +148,10 @@ function uClick(sq) {//console.log("lock:", lock)
     } else if (lock) {
         unhighlight();
         uDST = parseInt(sq);
-        search(1, uSRC, uDST);
+        
+        if (search(2, 1, uSRC, uDST) == Math.abs(10000)) console.log("illegal move");
+        
+
         draw();
         lock = 0;
     }
