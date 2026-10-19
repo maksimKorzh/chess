@@ -24,7 +24,7 @@
     
 */
 
-var board = new Array(128);
+var board = new Array(128); side = 8;
 var rules = [
     [ 0 ], [ -16, -1, 16, 1, -17, -15, 17, 15 ],
     [ 15, 16, 17 ], [ -33, -31, 33, 31, -18, -14, 18, 14 ],
@@ -32,8 +32,15 @@ var rules = [
     [ -16, -1, 16, 1, -17, -15, 17, 15 ]
 ];
 
+var moves = [];
+var lock = 0;
+
+var uSRC = -1;
+var uDST = -1;
+
 // Find best move
-function search(side) {
+function search(list, uSrc, uDst) {
+    if (list) moves = [];
     for (let src = 0; src < 120; src++) {
         let pce = board[src];
         if (!(pce & side) || (src & 0x88)) continue;
@@ -42,16 +49,35 @@ function search(side) {
             if (pce == 10) dir *= -1;
             let dst = src + dir;
             while (!(dst & 0x88)) {
-                let capPce = board[dst];
+                let capSq = dst;
+                let capPce = board[capSq];
                 if (capPce & side) break;
                 if (pceType == 2) {
                     if (!(dir & 7) && capPce) break;
                     if ((dir & 7) && !capPce) break;
                 }
                 
+                if (list) moves.push([src, dst]);
+                
+                board[capSq] = 0;
+                board[src] = 0;
+                board[dst] = pce;
+                
+                if (capSq != dst) console.log("capSq != dst")
                 
                 
-                document.getElementById(dst).innerHTML = "x";
+                if (list && src == uSrc && dst == uDst) {
+                    side = 24 - side;
+                    return 0;
+                }
+                
+                //document.getElementById(dst).innerHTML = "x";
+                
+                
+                
+                board[dst] = 0;
+                board[src] = pce;
+                board[capSq] = capPce;
                 
 
                 if (pceType == 2) {
@@ -78,10 +104,46 @@ function reset() {
 
 // Draw pieces
 function draw() {
-    for (let i = 0; i < 120; i++) {
-        if (i & 0x88) continue;
-        q=document.getElementById(i);
-        q.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[i]&15];
+    for (let sq = 0; sq < 120; sq++) {
+        if (sq & 0x88) continue;
+        q=document.getElementById(sq);
+        q.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
+    } console.log("side:", side);
+}
+
+// Highlight square
+function highlight(sq) {
+    document.getElementById(sq).classList.add('highlight');
+}
+
+// Clear highlight
+function unhighlight() {
+    for (let sq = 0; sq < 120; sq++) {
+        if (sq & 0x88) continue;
+        document.getElementById(sq).classList.remove('highlight');
+    }
+}
+
+// User click
+function uClick(sq) {//console.log("lock:", lock)
+    if (!lock) {
+        unhighlight();
+        
+        search(1, -1, -1);
+        
+        for (let i = 0; i < moves.length; i++) {
+            if (sq == moves[i][0]) {
+                highlight(moves[i][0]);
+                highlight(moves[i][1]);
+                uSRC = parseInt(sq); lock = 1;
+            }
+        }
+    } else if (lock) {
+        unhighlight();
+        uDST = parseInt(sq);
+        search(1, uSRC, uDST);
+        draw();
+        lock = 0;
     }
 }
 
@@ -90,27 +152,35 @@ function draw() {
     let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
     let ui = ""; for (let i = 0; i < 120; i++)
     ui += i & 8 && (i += 7) ? `<tr>` :`<th id="${i}"
-    onclick="alert(this.id + ', ' + board[this.id])"
+    onclick="uClick(this.id)"
     style="
         background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
         width: ${size}px;
         height: ${size}px;
     ">`; document.write(`
     <meta name="viewport" content="user-scalable=no">
+    <style>
+        .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
+        .mate { box-shadow: inset 0px 0px 5px 5px red; }
+    </style>
     <table style="
         font-size: ${size-40}px;
         cursor:default;
         border-spacing: 0px;
         display: grid;
         place-items: center;
+        user-select: none;
+        border: 1px solid #777777;"
+        unselectable="on"
+        onselectstart="return false;"
+        onmousedown="return false;
     ">${ui}</table>`);
 })()
 
-//reset();
-board.fill(0);
+reset();
+/*board.fill(0);
 board[20] = 18;
-board[100] = 10;
+board[100] = 10;*/
 
 draw();
-search(8);
 </script>
