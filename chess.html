@@ -1,10 +1,33 @@
 <script>
 
 var board = new Array(128), side = 8, ep = -1, castle = 15;
+var nodes = 0;
 
 // Engine
-function engine(depth, list, uSrc, uDst) {
-    if (!depth) return 0;
+function engine(depth, list, uSrc, uDst, mode = 0) {
+    if (mode === 1) {
+        if (depth === 0) {
+            nodes++;
+            return;
+        }
+
+        for (let move of engine(1, 1, -1, -1)) {
+            let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+
+            engine(1, 1, move[0], move[1]);
+
+            if (!engine(1, 1, -1, -1).length) {
+                board = JSON.parse(oldBoard); side = oldSide; ep = oldEp; castle = oldCastle;
+                continue;
+            }
+
+            engine(depth - 1, 0, -1, -1, 1);
+            board = JSON.parse(oldBoard); side = oldSide; ep = oldEp; castle = oldCastle;
+        }
+
+        return;
+    }
+
     if (list) var moves = [];
     
     let src = 0; do {
@@ -52,17 +75,10 @@ function engine(depth, list, uSrc, uDst) {
                     side = 24 - side;
                     return 'make';
                 }
-
-                if (!list) engine(depth-1, list, uSrc, uDst);
-
-                
                 
                 board[dst] = 0;
                 board[src] = pce;
                 board[capSq] = capPce;
-                
-                
-                
 
                 if (pceType == 2) {
                     if ((src >> 4) != ((side == 8) ? 6 : 1)) break;
@@ -78,6 +94,7 @@ function engine(depth, list, uSrc, uDst) {
     if (list) return moves;
 }
 
+// GUI
 function ui(dst) {
     if (document.getElementById("board") == null) {
         let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
@@ -142,7 +159,7 @@ function print() {
 
 /* DEBUG */
 
-nodes = 0; function perftDriver(depth) {
+nodes = 0; function perftDriver(depth, ply) {
     if (!depth) { nodes++; return; }
     for (let move of engine(1, 1, -1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
@@ -151,7 +168,8 @@ nodes = 0; function perftDriver(depth) {
             board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
         }
-        perftDriver(depth - 1);
+
+        perftDriver(depth - 1, ply+1);
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
     }
 }
@@ -170,7 +188,7 @@ function perftTest(depth) {
             continue;
         }
         let cumNodes = nodes;
-        perftDriver(depth - 1);
+        perftDriver(depth - 1, 0);
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
         let oldNodes = nodes - cumNodes; count++;
         console.log(  '   move' +
@@ -184,6 +202,7 @@ function perftTest(depth) {
     resultString += '\n   Nodes: ' + nodes;
     resultString += '\n    Time: ' + (Date.now() - startTime) + ' ms\n';
     console.log(resultString);
-} //perftTest(6); ui();
+} //perftTest(4); ui();
+
 
 </script>
