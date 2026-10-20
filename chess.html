@@ -1,54 +1,20 @@
 <script>
 
-/*
+var board = new Array(128), side = 8, ep = -1, castle = 15;
 
-    ===============================
-            Piece Encoding
-    ===============================
-
-          Black  White   type   Dec
-    
-    K       0      1     001    9
-    P       0      1     010    10
-    N       0      1     011    11
-    B       0      1     100    12
-    R       0      1     101    13
-    Q       0      1     110    14
-
-    k       1      0     001    17
-    p       1      0     010    18
-    n       1      0     011    19
-    b       1      0     100    20
-    r       1      0     101    21
-    q       1      0     110    22
-    
-*/
-
-var board = new Array(128), side = 8; 
-var rules = [
-    [ 0 ], [ -16, -1, 16, 1, -17, -15, 17, 15 ],
-    [ 15, 16, 17 ], [ -33, -31, 33, 31, -18, -14, 18, 14 ],
-    [ -17, -15, 17, 15], [-16, -1, 16, 1 ],
-    [ -16, -1, 16, 1, -17, -15, 17, 15 ]
-];
-
-var moves = [];
-var lock = 0;
-
-var uSRC = -1;
-var uDST = -1;
-
-var ply = 0;
-
-// Find best move
-function search(depth, list, uSrc, uDst) {
+// Engine
+function engine(depth, list, uSrc, uDst) {
     if (!depth) return 0;
-    if (list) moves = [];
-    for (let src = 0; src < 120; src++) {
+    if (list) var moves = [];
+    
+    let src = 0; do {
         let pce = board[src];
         if (!(pce & side) || (src & 0x88)) continue;
         let pceType = pce & 7;
-        for (let dir of rules[pceType]) {
+        for (let dir of [[0], [-16, -1,  16,  1, -17, -15, 17, 15],
+                [15, 16, 17], [-33, -31, 33, 31, -18, -14, 18, 14],
+                              [-17, -15, 17, 15], [-16, -1, 16, 1],
+                              [-16,  -1, 16,  1, -17, -15, 17, 15]][pceType]) {
             if (pce == 10) dir *= -1;
             let dst = src + dir;
             while (!(dst & 0x88)) {
@@ -59,9 +25,9 @@ function search(depth, list, uSrc, uDst) {
                     if (!(dir & 7) && capPce) break;
                     if ((dir & 7) && !capPce) break;
                 }
-                if ((capPce & 7) == 1) return 10000 - ply;
-                
+
                 if (list) moves.push([src, dst]);
+                if ((capPce & 7) == 1) return list ? [] : 10000;
                 
                 board[capSq] = 0;
                 board[src] = 0;
@@ -76,9 +42,9 @@ function search(depth, list, uSrc, uDst) {
                 }
                 
                 
-                ply++;
-                search(depth-1, list, uSrc, uDst);
-                ply--;
+
+                engine(depth-1, list, uSrc, uDst);
+
                 
                 
                 board[dst] = 0;
@@ -95,102 +61,59 @@ function search(depth, list, uSrc, uDst) {
                 dst += dir;
             }
         }
-    }
+    } while (++src < 120);
+    
+    if (list) return moves;
 }
 
-// New game
-function reset() {
-    board.fill(0);
-    let i = 8; while (i--) {
-        board[i] = (board[i+112] = [13, 11, 12, 14, 9, 12, 11, 13][i])+8;
-        board[i+96] = 10;
-        board[i+16] = 18;
-    }
-}
-
-// Draw pieces
-function draw() {
-    for (let sq = 0; sq < 120; sq++) {
-        if (sq & 0x88) continue;
-        q=document.getElementById(sq);
-        q.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
-    } console.log("side:", side);
-}
-
-// Highlight square
-function highlight(sq) {
-    document.getElementById(sq).classList.add('highlight');
-}
-
-// Clear highlight
-function unhighlight() {
-    for (let sq = 0; sq < 120; sq++) {
-        if (sq & 0x88) continue;
-        document.getElementById(sq).classList.remove('highlight');
-    }
-}
-
-// User click
-function uClick(sq) {//console.log("lock:", lock)
-    if (!lock) {
-        unhighlight();
-        
-        search(1, 1, -1, -1);
-        
-        
-        for (let i = 0; i < moves.length; i++) {
-            if (sq == moves[i][0]) {
-                highlight(moves[i][0]);
-                highlight(moves[i][1]);
-                uSRC = parseInt(sq); lock = 1;
-            }
+function ui(dst) {
+    if (document.getElementById("board") == null) {
+        let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
+        let ui = ""; for (let i = 0; i < 120; i++)
+        ui += i & 8 && (i += 7) ? `<tr>` :`<th id="${i}"
+        onclick="let i = 2; while(i--) ui(parseInt(this.id));" style="
+            background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
+            width: ${size}px;
+            height: ${size}px;
+        ">`; document.write(`
+        <meta name="viewport" content="user-scalable=no">
+        <style>
+            .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
+            .mate { box-shadow: inset 0px 0px 5px 5px red; }
+        </style>
+        <table id="board" style="
+            font-size: ${size-40}px;
+            cursor:default;
+            border-spacing: 0px;
+            display: grid;
+            place-items: center;
+            user-select: none;
+            border: 1px solid #777777;"
+            unselectable="on"
+            onselectstart="return false;"
+            onmousedown="return false;
+        ">${ui}</table>`); board.fill(0);
+        let i = 8; while (i--) {
+            board[i] = (board[i+112] = [13, 11, 12, 14, 9, 12, 11, 13][i])+8;
+            board[i+96] = 10;
+            board[i+16] = 18;
         }
-    } else if (lock) {
-        unhighlight();
-        uDST = parseInt(sq);
-        
-        if (search(2, 1, uSRC, uDST) == Math.abs(10000)) console.log("illegal move");
-        
+    } let lock = 0; for (let sq in board) {
+        if (sq & 0x88) continue;
+        if (document.getElementById(sq).classList[0] == "highlight") lock = 1;
+        s=document.getElementById(sq);
+        s.classList.remove('highlight');
+        s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
+    } for (let move of engine(1, 1, -1, -1)) {
+        if (dst == move[0]) {
+            for (let s of move) document.getElementById(s).classList.add('highlight');
+            src = dst; lock = 1;
+        } 
+    } if (lock) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        engine(1, 1, src, dst); if (!engine(1, 1, -1, -1).length)
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+    } console.log("side:", side);
+} ui();
 
-        draw();
-        lock = 0;
-    }
-}
-
-// Draw board
-(function init() {
-    let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
-    let ui = ""; for (let i = 0; i < 120; i++)
-    ui += i & 8 && (i += 7) ? `<tr>` :`<th id="${i}"
-    onclick="uClick(this.id)"
-    style="
-        background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
-        width: ${size}px;
-        height: ${size}px;
-    ">`; document.write(`
-    <meta name="viewport" content="user-scalable=no">
-    <style>
-        .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
-        .mate { box-shadow: inset 0px 0px 5px 5px red; }
-    </style>
-    <table style="
-        font-size: ${size-40}px;
-        cursor:default;
-        border-spacing: 0px;
-        display: grid;
-        place-items: center;
-        user-select: none;
-        border: 1px solid #777777;"
-        unselectable="on"
-        onselectstart="return false;"
-        onmousedown="return false;
-    ">${ui}</table>`);
-})()
-
-reset();
-/*board.fill(0);
-board[20] = 18;
-board[100] = 10;*/
-
-draw();
 </script>
