@@ -19,11 +19,15 @@ function engine(depth, list, uSrc, uDst) {
             let dst = src + dir;
             while (!(dst & 0x88)) {
                 let capSq = dst;
+                
+                if (pceType == 2 && dst == ep) console.log("shift capSq", ep);
+                
                 let capPce = board[capSq];
                 if (capPce & side) break;
                 if (pceType == 2) {
                     if (!(dir & 7) && capPce) break;
-                    if ((dir & 7) && !capPce) break;
+                    if ((dir & 7) && !capPce && capSq != ep) break;
+                    
                 }
 
                 if (list) moves.push([src, dst]);
@@ -33,15 +37,11 @@ function engine(depth, list, uSrc, uDst) {
                 board[src] = 0;
                 board[dst] = pce;
                 
-                if (capSq != dst) console.log("capSq != dst")
-                
                 
                 if (list && src == uSrc && dst == uDst) {
                     side = 24 - side;
                     return 'make';
                 }
-                
-                
 
                 if (!list) engine(depth-1, list, uSrc, uDst);
 
@@ -51,10 +51,13 @@ function engine(depth, list, uSrc, uDst) {
                 board[src] = pce;
                 board[capSq] = capPce;
                 
+                
+                
 
                 if (pceType == 2) {
                     if ((src >> 4) != ((side == 8) ? 6 : 1)) break;
                     if ((dst >> 4) != ((side == 8) ? 5 : 2)) break;
+                    ep = dst;
                 }
                 if (capPce & (24 - side)) break;
                 if (!(pceType & 4) && pceType != 2) break;
@@ -113,7 +116,7 @@ function ui(dst) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
         engine(1, 1, src, dst); if (!engine(1, 1, -1, -1).length)
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-    } //console.log("side:", side);
+    } console.log("side:", side, "ep:", ep);
 } ui();
 
 
@@ -172,6 +175,6 @@ function perftTest(depth) {
     resultString += '\n   Nodes: ' + nodes;
     resultString += '\n    Time: ' + (Date.now() - startTime) + ' ms\n';
     console.log(resultString);
-} perftTest(4); ui();
+} //perftTest(4); ui();
 
 </script>
