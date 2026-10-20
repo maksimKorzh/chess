@@ -38,12 +38,12 @@ function engine(depth, list, uSrc, uDst) {
                 
                 if (list && src == uSrc && dst == uDst) {
                     side = 24 - side;
-                    return 0;
+                    return 'make';
                 }
                 
                 
 
-                engine(depth-1, list, uSrc, uDst);
+                if (!list) engine(depth-1, list, uSrc, uDst);
 
                 
                 
@@ -78,7 +78,7 @@ function ui(dst) {
         ">`; document.write(`
         <meta name="viewport" content="user-scalable=no">
         <style>
-            .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
+            .highlight { box-shadow: inset 0px 0px 3px 3px #ffbb00; }
             .mate { box-shadow: inset 0px 0px 5px 5px red; }
         </style>
         <table id="board" style="
@@ -113,7 +113,65 @@ function ui(dst) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
         engine(1, 1, src, dst); if (!engine(1, 1, -1, -1).length)
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-    } console.log("side:", side);
+    } //console.log("side:", side);
 } ui();
+
+
+function print() {
+    let b = "";
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            let sq = r*16+c;
+            if (sq & 0x88) continue;
+            b += ".kpnbrq--KPNBRQ"[board[sq]&15];
+        } b += "\n";
+    } console.log(b, nodes);
+}
+
+/* DEBUG */
+
+nodes = 0; function perftDriver(depth) {
+    if (!depth) { nodes++; return; }
+    for (let move of engine(1, 1, -1, -1)) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        engine(1, 1, move[0], move[1]);
+        if (!engine(1, 1, -1, -1).length) {
+            board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+            continue;
+        }
+        perftDriver(depth - 1);
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+    }
+}
+
+function perftTest(depth) {
+    nodes = 0;
+    console.log('   Performance test:\n');
+    resultString = '';
+    let startTime = Date.now();
+    let count = 0;
+    for (let move of engine(1, 1, -1, -1)) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        engine(1, 1, move[0], move[1]);
+        if (!engine(1, 1, -1, -1).length) {
+            board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+            continue;
+        }
+        let cumNodes = nodes;
+        perftDriver(depth - 1);
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        let oldNodes = nodes - cumNodes; count++;
+        console.log(  '   move' +
+                    ' ' + (count + 1) + ((count < 9) ? ':  ': ': ') +
+                    move[0] + " " +
+                    move[1] + " " +
+            '    nodes: ' + oldNodes);
+    }
+    
+    resultString += '\n   Depth: ' + depth;
+    resultString += '\n   Nodes: ' + nodes;
+    resultString += '\n    Time: ' + (Date.now() - startTime) + ' ms\n';
+    console.log(resultString);
+} perftTest(4); ui();
 
 </script>
