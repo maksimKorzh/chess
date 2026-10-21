@@ -14,17 +14,45 @@ function movegen(uSrc, uDst) {
                 [15, 16, 17], [-33, -31, 33, 31, -18, -14, 18, 14],
                               [-17, -15, 17, 15], [-16, -1, 16, 1],
                               [-16,  -1, 16,  1, -17, -15, 17, 15]][pceType]) {
+            
+            
+            let pDir = dir;
+            
             if (pce == 10) dir *= -1;
             let dst = src + dir;
             while (!(dst & 0x88)) {
+            
+            
+            
+            
                 let capSq = dst;
                 if (pceType == 2 && dst == ep) capSq ^= 16;
                 let capPce = board[capSq];
                 if (capPce & side) break;
+                
+                // if placed here - king can no longer escape check but something wrong goes with nodes in initial pos depth 5
+                //if ((capPce & 7) == 1 || (ep > 0 && board[ep] && (((dst-ep)<2) & ((ep-dst)<2)))) return [];
+                
+                
+                // this is what kind of worked
+                //if (pceType == 2) {
+                //    if (!(/*dir*/(dst-src) & 7) && capPce) break;
+                //    if ((/*dir*/(dst-src) & 7) && !capPce && capSq != ep) break;
+                //}
+                
+                
                 if (pceType == 2) {
-                    if (!(dir & 7) && capPce) break;
-                    if ((dir & 7) && !capPce && capSq != ep) break;
-                } if ((capPce & 7) == 1) return [];
+                    if (pDir == 17 && !capPce && capSq != ep) break;
+                    else if (pDir == 15 && !capPce && capSq != ep) break;
+                    else if (pDir == 16 && capPce) break;
+                }
+                
+
+                // here nodes in initial pos depth 5 are correct but king castles while being under pawn check
+                if ((capPce & 7) == 1 || (ep > 0 && board[ep] && dst-ep<2 & ep-dst<2)) return [];
+                
+                
+                
                 moves.push([src, dst]);
                 
 
@@ -44,12 +72,25 @@ function movegen(uSrc, uDst) {
                 } let oldCastle = castle;
                 castle &= board[src + 8];
                 castle &= board[dst + 8];
-                
+
                 if (src == uSrc && dst == uDst) {
-                    ep = -1; if (pceType == 2) {
+                    ep = -1;
+                    
+                    if (pceType == 2) {
                         if (((src >> 4) == ((side == 8) ? 6 : 1)) &&
-                           ((dst >> 4) == ((side == 8) ? 4 : 3))) ep = dst ^ 16;
-                    } side = 24 - side;
+                           ((dst >> 4) == ((side == 8) ? 4 : 3))) ep = dst ^ 16;   
+                    } else if (pceType == 1) {
+                        if (src == 116) {
+                            if (dst == 118) ep = 117;
+                            if (dst == 114) ep = 115;
+                        } else if (src == 4) {
+                            if (dst == 6) ep = 5;
+                            if (dst == 2) ep = 3;
+                        }
+                    }
+                    
+                    
+                    side = 24 - side;
                     return 'make';
                 }
                 
@@ -77,8 +118,6 @@ function movegen(uSrc, uDst) {
 
                     if ((dir != 1) && (dir != -1)) break;
                     
-                    
-                    
                     if (dir == 1) {
                         //if (board[src + 1]) break;
                         if (board[src + 2]) break;
@@ -89,6 +128,7 @@ function movegen(uSrc, uDst) {
                     
                     
                     if (dir == -1) {
+                        //if (board[src - 1]) break;
                         if (board[src - 2]) break;
                         if (side == 8 && !(castle & 2)) break;
                         if (side == 16 && !(castle & 8)) break;
@@ -96,6 +136,8 @@ function movegen(uSrc, uDst) {
                     
                     if (src != ((side == 8) ? 116: 4)) break;
                     if (Math.abs(src-dst) > 1) break;
+                    
+                    console.log()
                 }
                 
                 if (capPce & (24 - side)) break;
@@ -140,7 +182,21 @@ function ui(dst) {
             board[i+80] = 0; board[i+96] = 10;
         } board[8] = 7; board[12] = 3; board[15] = 11;
         board[120] = 13; board[124] = 12; board[127] = 14;
-        //board[116] = 9; board[117]=11+8; board[4]=9+8
+        
+        // DEBUG r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 
+        /*board = [
+            21,  0,  0,  0, 17,  0,  0, 21,    7, 15, 15, 15,  3, 15, 15, 11,
+            18,  0, 18, 18, 22, 18, 20,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+            20, 19,  0,  0, 18, 19, 18,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+             0,  0,  0, 10, 11,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+             0, 18,  0,  0, 10,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+             0,  0, 11,  0,  0, 14,  0, 18,   15, 15, 15, 15, 15, 15, 15, 15,
+            10, 10, 10, 12, 12, 10, 10, 10,   15, 15, 15, 15, 15, 15, 15, 15,
+            13,  0,  0,  0,  9,  0,  0, 13,   13, 15, 15, 15, 12, 15, 15, 14
+        ];*/
+            
+        
+
     } let lock = 0; for (let sq in board) {
         if (sq & 0x88) continue;
         if (document.getElementById(sq).classList[0] == "highlight") lock = 1;
