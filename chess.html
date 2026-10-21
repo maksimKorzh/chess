@@ -27,29 +27,21 @@ function movegen(uSrc, uDst) {
             
                 let capSq = dst;
                 if (pceType == 2 && dst == ep) capSq ^= 16;
-                let capPce = board[capSq];
+                let capPce = board[capSq];                
                 if (capPce & side) break;
                 
-                // if placed here - king can no longer escape check but something wrong goes with nodes in initial pos depth 5
-                //if ((capPce & 7) == 1 || (ep > 0 && board[ep] && (((dst-ep)<2) & ((ep-dst)<2)))) return [];
-                
+                let returnFlag = 0;
+                if (ep > 0 && board[ep] && dst-ep<2 & ep-dst<2) returnFlag = 1;
                 
                 // this is what kind of worked
-                //if (pceType == 2) {
-                //    if (!(/*dir*/(dst-src) & 7) && capPce) break;
-                //    if ((/*dir*/(dst-src) & 7) && !capPce && capSq != ep) break;
-                //}
-                
-                
                 if (pceType == 2) {
-                    if (pDir == 17 && !capPce && capSq != ep) break;
-                    else if (pDir == 15 && !capPce && capSq != ep) break;
-                    else if (pDir == 16 && capPce) break;
+                    if (!((dst-src) & 7) && capPce) break;
+                    if (((dst-src) & 7) && !capPce && capSq != ep) break;
                 }
                 
 
                 // here nodes in initial pos depth 5 are correct but king castles while being under pawn check
-                if ((capPce & 7) == 1 || (ep > 0 && board[ep] && dst-ep<2 & ep-dst<2)) return [];
+                if ((capPce & 7) == 1 || returnFlag) return [];
                 
                 
                 
@@ -130,6 +122,7 @@ function movegen(uSrc, uDst) {
                     if (dir == -1) {
                         //if (board[src - 1]) break;
                         if (board[src - 2]) break;
+                        if (board[src - 3]) break;
                         if (side == 8 && !(castle & 2)) break;
                         if (side == 16 && !(castle & 8)) break;
                     }
@@ -184,7 +177,7 @@ function ui(dst) {
         board[120] = 13; board[124] = 12; board[127] = 14;
         
         // DEBUG r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 
-        /*board = [
+        board = [
             21,  0,  0,  0, 17,  0,  0, 21,    7, 15, 15, 15,  3, 15, 15, 11,
             18,  0, 18, 18, 22, 18, 20,  0,   15, 15, 15, 15, 15, 15, 15, 15,
             20, 19,  0,  0, 18, 19, 18,  0,   15, 15, 15, 15, 15, 15, 15, 15,
@@ -193,7 +186,7 @@ function ui(dst) {
              0,  0, 11,  0,  0, 14,  0, 18,   15, 15, 15, 15, 15, 15, 15, 15,
             10, 10, 10, 12, 12, 10, 10, 10,   15, 15, 15, 15, 15, 15, 15, 15,
             13,  0,  0,  0,  9,  0,  0, 13,   13, 15, 15, 15, 12, 15, 15, 14
-        ];*/
+        ];
             
         
 
@@ -257,11 +250,12 @@ function perftTest(depth) {
         perftDriver(depth - 1, 0);
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
         let oldNodes = nodes - cumNodes; count++;
-        console.log(  '   move' +
-                    ' ' + (count + 1) + ((count < 9) ? ':  ': ': ') +
-                    move[0] + " " +
-                    move[1] + " " +
-            '    nodes: ' + oldNodes);
+        console.log(
+            '   move' +
+            ' ' + (count) + ((count < 9) ? ':  ' : ': ') + String.fromCharCode(97 + (move[0] & 7)) +
+            (8 - (move[0] >> 4)) + String.fromCharCode(97 + (move[1] & 7)) + (8 - (move[1] >> 4)) +
+            '    nodes: ' + oldNodes
+        );
     }
     
     resultString += '\n   Depth: ' + depth;
