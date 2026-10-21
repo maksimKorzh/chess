@@ -3,7 +3,7 @@
 var board = new Array(128), side = 8, ep = -1, castle = 15;
 var nodes = 0;
 
-// Engine
+// Rules
 function movegen(uSrc, uDst) {
     var moves = [];
     let src = -1; while (++src < 120) {
@@ -46,8 +46,16 @@ function movegen(uSrc, uDst) {
                 if (pceType == 2) {
                     if ((src >> 4) != ((side == 8) ? 6 : 1)) break;
                     if ((dst >> 4) != ((side == 8) ? 5 : 2)) break;
-                } if (capPce & (24 - side)) break;
-                if (!(pceType & 4) && pceType != 2) break;
+                } else if (pceType == 1) {
+                    if (board[src + 2] && dir == 1) break;
+                    if (board[src - 2] && dir == -1) break;
+                    if ((dir != 1) && (dir != -1)) break;
+                    if (src != ((side == 8) ? 116: 4)) break;
+                    if (Math.abs(src-dst) > 1) break;
+                }
+                
+                if (capPce & (24 - side)) break;
+                if (!(pceType & 4) && pceType != 2 && pceType != 1) break;
                 dst += dir;
             }
         }
@@ -86,7 +94,7 @@ function ui(dst) {
             board[i] = (board[i+112] = [13, 11, 12, 14, 9, 12, 11, 13][i])+8;
             board[i+96] = 10;
             board[i+16] = 18;
-        }
+        } //board[116] = 9; board[117]=11+8; board[4]=9+8
     } let lock = 0; for (let sq in board) {
         if (sq & 0x88) continue;
         if (document.getElementById(sq).classList[0] == "highlight") lock = 1;
