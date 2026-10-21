@@ -4,33 +4,9 @@ var board = new Array(128), side = 8, ep = -1, castle = 15;
 var nodes = 0;
 
 // Engine
-function engine(depth, list, uSrc, uDst, mode = 0) {
-    if (mode === 1) {
-        if (depth === 0) {
-            nodes++;
-            return;
-        }
-
-        for (let move of engine(1, 1, -1, -1)) {
-            let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-
-            engine(1, 1, move[0], move[1]);
-
-            if (!engine(1, 1, -1, -1).length) {
-                board = JSON.parse(oldBoard); side = oldSide; ep = oldEp; castle = oldCastle;
-                continue;
-            }
-
-            engine(depth - 1, 0, -1, -1, 1);
-            board = JSON.parse(oldBoard); side = oldSide; ep = oldEp; castle = oldCastle;
-        }
-
-        return;
-    }
-
-    if (list) var moves = [];
-    
-    let src = 0; do {
+function movegen(uSrc, uDst) {
+    var moves = [];
+    let src = -1; while (++src < 120) {
         let pce = board[src];
         if (!(pce & side) || (src & 0x88)) continue;
         let pceType = pce & 7;
@@ -42,56 +18,40 @@ function engine(depth, list, uSrc, uDst, mode = 0) {
             let dst = src + dir;
             while (!(dst & 0x88)) {
                 let capSq = dst;
-                
                 if (pceType == 2 && dst == ep) capSq ^= 16;
-                
                 let capPce = board[capSq];
                 if (capPce & side) break;
                 if (pceType == 2) {
                     if (!(dir & 7) && capPce) break;
                     if ((dir & 7) && !capPce && capSq != ep) break;
-                }
-
-                
-
-                if (list) moves.push([src, dst]);
-                if ((capPce & 7) == 1) return list ? [] : 10000;
+                } if ((capPce & 7) == 1) return [];
+                moves.push([src, dst]);
                 
                 board[capSq] = 0;
                 board[src] = 0;
                 board[dst] = pce;
                 
-
-                
-                
-                if (list && src == uSrc && dst == uDst) {
-                    ep = -1;
-                    if (pceType == 2) {
+                if (src == uSrc && dst == uDst) {
+                    ep = -1; if (pceType == 2) {
                         if (((src >> 4) == ((side == 8) ? 6 : 1)) &&
                            ((dst >> 4) == ((side == 8) ? 4 : 3))) ep = dst ^ 16;
-                    }
-                
-                
-                    side = 24 - side;
+                    } side = 24 - side;
                     return 'make';
                 }
                 
                 board[dst] = 0;
                 board[src] = pce;
                 board[capSq] = capPce;
-
+                
                 if (pceType == 2) {
                     if ((src >> 4) != ((side == 8) ? 6 : 1)) break;
                     if ((dst >> 4) != ((side == 8) ? 5 : 2)) break;
-                }
-                if (capPce & (24 - side)) break;
+                } if (capPce & (24 - side)) break;
                 if (!(pceType & 4) && pceType != 2) break;
                 dst += dir;
             }
         }
-    } while (++src < 120);
-    
-    if (list) return moves;
+    } return moves;
 }
 
 // GUI
@@ -133,19 +93,20 @@ function ui(dst) {
         s=document.getElementById(sq);
         s.classList.remove('highlight');
         s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
-    } for (let move of engine(1, 1, -1, -1)) {
+    } for (let move of movegen(1, -1, -1)) {
         if (dst == move[0]) {
             for (let s of move) document.getElementById(s).classList.add('highlight');
             src = dst; lock = 1;
         } 
     } if (lock) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        engine(1, 1, src, dst); if (!engine(1, 1, -1, -1).length)
+        movegen(src, dst); if (!movegen(-1, -1).length)
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
     } console.log("side:", side, "ep:", ep);
 } ui();
 
 
+/* DEBUG */
 function print() {
     let b = "";
     for (let r = 0; r < 8; r++) {
@@ -157,19 +118,15 @@ function print() {
     } console.log(b, nodes);
 }
 
-/* DEBUG */
-
 nodes = 0; function perftDriver(depth, ply) {
     if (!depth) { nodes++; return; }
-    for (let move of engine(1, 1, -1, -1)) {
+    for (let move of movegen(-1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        engine(1, 1, move[0], move[1]);
-        if (!engine(1, 1, -1, -1).length) {
+        movegen(move[0], move[1]);
+        if (!movegen(-1, -1).length) {
             board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
-        }
-
-        perftDriver(depth - 1, ply+1);
+        } perftDriver(depth - 1, ply+1);
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
     }
 }
@@ -180,14 +137,13 @@ function perftTest(depth) {
     resultString = '';
     let startTime = Date.now();
     let count = 0;
-    for (let move of engine(1, 1, -1, -1)) {
+    for (let move of movegen(-1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        engine(1, 1, move[0], move[1]);
-        if (!engine(1, 1, -1, -1).length) {
+        movegen(move[0], move[1]);
+        if (!movegen(-1, -1).length) {
             board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
-        }
-        let cumNodes = nodes;
+        } let cumNodes = nodes;
         perftDriver(depth - 1, 0);
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
         let oldNodes = nodes - cumNodes; count++;
@@ -202,7 +158,7 @@ function perftTest(depth) {
     resultString += '\n   Nodes: ' + nodes;
     resultString += '\n    Time: ' + (Date.now() - startTime) + ' ms\n';
     console.log(resultString);
-} //perftTest(4); ui();
+} //perftTest(5); ui();
 
 
 </script>
