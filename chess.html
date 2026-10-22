@@ -1,6 +1,7 @@
 <script>
 
 var board = new Array(128), side = 8, ep = -1, castle = 15;
+var prom = 6;
 var nodes = 0;
 
 /*
@@ -26,7 +27,7 @@ var nodes = 0;
 */
 
 // Rules
-function movegen(uSrc, uDst) {
+function movegen(uSrc, uDst, uProm) {
     var moves = [];
     let src = -1; while (++src < 120) {
         let pce = board[src];
@@ -43,11 +44,11 @@ function movegen(uSrc, uDst) {
                 if (pceType == 2 && dst == ep) capSq ^= 16;
                 let capPce = board[capSq];                
                 if (capPce & side) break;
-                if (ep > 0 && board[ep] && dst-ep<2 & ep-dst<2) return[];
+                if (ep > 0 && board[ep] && ((dst-ep)<2) && ((ep-dst)<2)) return[];
                 if (pceType == 2) {
                     if (!((dst-src) & 7) && capPce) break;
                     if (((dst-src) & 7) && !capPce && capSq != ep) break;
-                } if ((capPce & 7) == 1) return []; moves.push([src, dst]);
+                } if ((capPce & 7) == 1) return []; //moves.push([src, dst]);
                 board[capSq] = 0; board[src] = 0; board[dst] = pce;
                 if (pceType == 1 && ((src == 116) || (src == 4))) {
                     switch(dst) {
@@ -58,6 +59,13 @@ function movegen(uSrc, uDst) {
                     }
                 } let oldCastle = castle;
                 castle &= board[src + 8]; castle &= board[dst + 8];
+                if (pceType == 2) {
+                    if ((dst >> 4) == (side == 8 ? 0 : 7)) {
+                        board[dst] = ((uProm > 0) ? uProm : 6) | side;
+                        for (let p = 6; p > 2; p--)
+                        moves.push([src, dst, p]);
+                    } else moves.push([src, dst]);
+                } else moves.push([src, dst]);
                 if (src == uSrc && dst == uDst) {
                     ep = -1; if (pceType == 2) {
                         if (((src >> 4) == ((side == 8) ? 6 : 1)) &&
@@ -138,41 +146,41 @@ function ui(dst) {
             board[i+80] = 0; board[i+96] = 10;
         } board[8] = 7; board[12] = 3; board[15] = 11;
         board[120] = 13; board[124] = 12; board[127] = 14;
-        
-        // DEBUG r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 
-        board = [
-            21,  0,  0,  0, 17,  0,  0, 21,    7, 15, 15, 15,  3, 15, 15, 11,
-            18,  0, 18, 18, 22, 18, 20,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-            20, 19,  0,  0, 18, 19, 18,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-             0,  0,  0, 10, 11,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-             0, 18,  0,  0, 10,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-             0,  0, 11,  0,  0, 14,  0, 18,   15, 15, 15, 15, 15, 15, 15, 15,
-            10, 10, 10, 12, 12, 10, 10, 10,   15, 15, 15, 15, 15, 15, 15, 15,
-            13,  0,  0,  0,  9,  0,  0, 13,   13, 15, 15, 15, 12, 15, 15, 14
-        ];
-            
-        
-
     } let lock = 0; for (let sq in board) {
         if (sq & 0x88) continue;
         if (document.getElementById(sq).classList[0] == "highlight") lock = 1;
         s=document.getElementById(sq);
         s.classList.remove('highlight');
         s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
-    } for (let move of movegen(-1, -1)) {
+    } for (let move of movegen(-1, -1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        movegen(move[0], move[1]); let isLegal = 1; if (!movegen(-1, -1).length) isLegal = 0;
-        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1)); let isLegal = 1;
+        if (!movegen(-1, -1, -1).length) isLegal = 0; board = JSON.parse(oldBoard);
+        side = oldSide, ep = oldEp, castle = oldCastle;
         if (!isLegal) continue; if (dst == move[0]) {
-            for (let s of move) document.getElementById(s).classList.add('highlight');
+            let s = -1; while (++s < 2) document.getElementById(move[s]).classList.add('highlight');
             src = dst; lock = 1;
         } 
-    } if (lock) movegen(src, dst);
-    console.log("side:", side, "ep:", ep, "castle", castle);
+    } if (lock) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        movegen(src, dst, prom); if (!movegen(-1, -1, -1).length)
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+    }
 } ui();
 
 
-/* DEBUG */
+// DEBUG r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 
+board = [
+    21,  0,  0,  0, 17,  0,  0, 21,    7, 15, 15, 15,  3, 15, 15, 11,
+    18,  0, 18, 18, 22, 18, 20,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+    20, 19,  0,  0, 18, 19, 18,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0,  0, 10, 11,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+     0, 18,  0,  0, 10,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
+     0,  0, 11,  0,  0, 14,  0, 18,   15, 15, 15, 15, 15, 15, 15, 15,
+    10, 10, 10, 12, 12, 10, 10, 10,   15, 15, 15, 15, 15, 15, 15, 15,
+    13,  0,  0,  0,  9,  0,  0, 13,   13, 15, 15, 15, 12, 15, 15, 14
+]; ui();
+        
 function print() {
     let b = "";
     for (let r = 0; r < 8; r++) {
@@ -186,17 +194,15 @@ function print() {
 
 nodes = 0; function perftDriver(depth, ply) {
     if (!depth) { nodes++; return; }
-    for (let move of movegen(-1, -1)) {
+    for (let move of movegen(-1, -1, -1)) {
         let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
         for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
-        movegen(move[0], move[1]);
-        if (!movegen(-1, -1).length) {
-            //board = JSON.parse(oldBoard),
+        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1));
+        if (!movegen(-1, -1, -1).length) {
             for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
             side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
         } perftDriver(depth - 1, ply+1);
-        //board = JSON.parse(oldBoard), 
         for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
         side = oldSide, ep = oldEp, castle = oldCastle;
     }
@@ -208,10 +214,10 @@ function perftTest(depth) {
     resultString = '';
     let startTime = Date.now();
     let count = 0;
-    for (let move of movegen(-1, -1)) {
+    for (let move of movegen(-1, -1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        movegen(move[0], move[1]);
-        if (!movegen(-1, -1).length) {
+        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1));
+        if (!movegen(-1, -1, -1).length) {
             board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
         } let cumNodes = nodes;
