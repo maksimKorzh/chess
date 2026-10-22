@@ -3,6 +3,28 @@
 var board = new Array(128), side = 8, ep = -1, castle = 15;
 var nodes = 0;
 
+/*
+
+    Initial
+
+0	1	0	0	0	0	0	0	0	0
+1	20	0	0	0	0	0	0	0	0
+2	400	0	0	0	0	0	0	0	0
+3	8,902	34	0	0	0	12	0	0	0
+4	197,281	1576	0	0	0	469	0	0	8
+5	4,865,609	82,719	258	0	0	27,351	6	0	347
+6	119,060,324	2,812,008	5248	0	0	809,099	329	46	10,828
+
+    Kiwipete
+    
+    1	48	8	0	2	0	0	0	0	0
+2	2039	351	1	91	0	3	0	0	0
+3	97862	17102	45	3162	0	993	0	0	1
+4	4085603	757163	1929	128013	15172	25523	42	6	43
+5	193690690	35043416	73365	4993637	8392	3309887	19883	2637	30171
+
+*/
+
 // Rules
 function movegen(uSrc, uDst) {
     var moves = [];
@@ -10,50 +32,23 @@ function movegen(uSrc, uDst) {
         let pce = board[src];
         if (!(pce & side) || (src & 0x88)) continue;
         let pceType = pce & 7;
-        for (let dir of [[0], [-16, -1,  16,  1, -17, -15, 17, 15],
-                [15, 16, 17], [-33, -31, 33, 31, -18, -14, 18, 14],
-                              [-17, -15, 17, 15], [-16, -1, 16, 1],
-                              [-16,  -1, 16,  1, -17, -15, 17, 15]][pceType]) {
-            
-            
-            let pDir = dir;
-            
+        let offsets = [[0], [-16, -1,  16,  1, -17, -15, 17, 15], [15, 16, 17],
+        [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
+        [-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]]
+        for (let dir of offsets[pceType]) {
             if (pce == 10) dir *= -1;
             let dst = src + dir;
             while (!(dst & 0x88)) {
-            
-            
-            
-            
                 let capSq = dst;
                 if (pceType == 2 && dst == ep) capSq ^= 16;
                 let capPce = board[capSq];                
                 if (capPce & side) break;
-                
-                let returnFlag = 0;
-                if (ep > 0 && board[ep] && dst-ep<2 & ep-dst<2) returnFlag = 1;
-                
-                // this is what kind of worked
+                if (ep > 0 && board[ep] && dst-ep<2 & ep-dst<2) return[];
                 if (pceType == 2) {
                     if (!((dst-src) & 7) && capPce) break;
                     if (((dst-src) & 7) && !capPce && capSq != ep) break;
-                }
-                
-
-                // here nodes in initial pos depth 5 are correct but king castles while being under pawn check
-                if ((capPce & 7) == 1 || returnFlag) return [];
-                
-                
-                
-                moves.push([src, dst]);
-                
-
-
-                
-                board[capSq] = 0;
-                board[src] = 0;
-                board[dst] = pce;
-                
+                } if ((capPce & 7) == 1) return []; moves.push([src, dst]);
+                board[capSq] = 0; board[src] = 0; board[dst] = pce;
                 if (pceType == 1 && ((src == 116) || (src == 4))) {
                     switch(dst) {
                         case 118: board[117] = 13; board[119] = 0; break;
@@ -62,13 +57,9 @@ function movegen(uSrc, uDst) {
                         case 2: board[3] = 21; board[0] = 0; break;
                     }
                 } let oldCastle = castle;
-                castle &= board[src + 8];
-                castle &= board[dst + 8];
-
+                castle &= board[src + 8]; castle &= board[dst + 8];
                 if (src == uSrc && dst == uDst) {
-                    ep = -1;
-                    
-                    if (pceType == 2) {
+                    ep = -1; if (pceType == 2) {
                         if (((src >> 4) == ((side == 8) ? 6 : 1)) &&
                            ((dst >> 4) == ((side == 8) ? 4 : 3))) ep = dst ^ 16;   
                     } else if (pceType == 1) {
@@ -79,19 +70,8 @@ function movegen(uSrc, uDst) {
                             if (dst == 6) ep = 5;
                             if (dst == 2) ep = 3;
                         }
-                    }
-                    
-                    
-                    side = 24 - side;
-                    return 'make';
-                }
-                
-                
-                
-                board[dst] = 0;
-                board[src] = pce;
-                board[capSq] = capPce;
-                
+                    } side = 24 - side; return 'make';
+                } board[dst] = 0; board[src] = pce; board[capSq] = capPce;
                 if (pceType == 1 && ((src == 116) || (src == 4))) {
                     switch(dst) {
                         case 118: board[119] = 13; board[117] = 0; break;
@@ -100,40 +80,23 @@ function movegen(uSrc, uDst) {
                         case 2: board[0] = 21; board[3] = 0; break;
                     }
                 } castle = oldCastle;
-                
                 if (pceType == 2) {
                     if ((src >> 4) != ((side == 8) ? 6 : 1)) break;
                     if ((dst >> 4) != ((side == 8) ? 5 : 2)) break;
                 } else if (pceType == 1) {
-                    
-                    
-
                     if ((dir != 1) && (dir != -1)) break;
-                    
                     if (dir == 1) {
-                        //if (board[src + 1]) break;
                         if (board[src + 2]) break;
                         if (side == 8 && !(castle & 1)) break;
                         if (side == 16 && !(castle & 4)) break;
-                    }
-                    
-                    
-                    
-                    if (dir == -1) {
-                        //if (board[src - 1]) break;
+                    } if (dir == -1) {
                         if (board[src - 2]) break;
                         if (board[src - 3]) break;
                         if (side == 8 && !(castle & 2)) break;
                         if (side == 16 && !(castle & 8)) break;
-                    }
-                    
-                    if (src != ((side == 8) ? 116: 4)) break;
+                    } if (src != ((side == 8) ? 116: 4)) break;
                     if (Math.abs(src-dst) > 1) break;
-                    
-                    console.log()
-                }
-                
-                if (capPce & (24 - side)) break;
+                } if (capPce & (24 - side)) break;
                 if (!(pceType & 4) && pceType != 2 && pceType != 1) break;
                 dst += dir;
             }
@@ -196,16 +159,16 @@ function ui(dst) {
         s=document.getElementById(sq);
         s.classList.remove('highlight');
         s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
-    } for (let move of movegen(1, -1, -1)) {
-        if (dst == move[0]) {
+    } for (let move of movegen(-1, -1)) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        movegen(move[0], move[1]); let isLegal = 1; if (!movegen(-1, -1).length) isLegal = 0;
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        if (!isLegal) continue; if (dst == move[0]) {
             for (let s of move) document.getElementById(s).classList.add('highlight');
             src = dst; lock = 1;
         } 
-    } if (lock) {
-        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        movegen(src, dst); if (!movegen(-1, -1).length)
-        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-    } console.log("side:", side, "ep:", ep, "castle", castle);
+    } if (lock) movegen(src, dst);
+    console.log("side:", side, "ep:", ep, "castle", castle);
 } ui();
 
 
@@ -224,13 +187,18 @@ function print() {
 nodes = 0; function perftDriver(depth, ply) {
     if (!depth) { nodes++; return; }
     for (let move of movegen(-1, -1)) {
-        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
+        for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
         movegen(move[0], move[1]);
         if (!movegen(-1, -1).length) {
-            board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+            //board = JSON.parse(oldBoard),
+            for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
+            side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
         } perftDriver(depth - 1, ply+1);
-        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        //board = JSON.parse(oldBoard), 
+        for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
+        side = oldSide, ep = oldEp, castle = oldCastle;
     }
 }
 
