@@ -1,9 +1,15 @@
 <script>
 
 var board = new Array(128), side = 8, ep = -1, castle = 15;
+var offsets = [
+    [0], [-16, -1,  16,  1, -17, -15, 17, 15], [15, 16, 17],
+    [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
+    [-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]
+];
+
 var prom = 6;
 var nodes = 0;
-
+        
 /*
 
     Initial
@@ -33,9 +39,6 @@ function movegen(uSrc, uDst, uProm) {
         let pce = board[src];
         if (!(pce & side) || (src & 0x88)) continue;
         let pceType = pce & 7;
-        let offsets = [[0], [-16, -1,  16,  1, -17, -15, 17, 15], [15, 16, 17],
-        [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
-        [-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]]
         for (let dir of offsets[pceType]) {
             if (pce == 10) dir *= -1;
             let dst = src + dir;
@@ -48,7 +51,7 @@ function movegen(uSrc, uDst, uProm) {
                 if (pceType == 2) {
                     if (!((dst-src) & 7) && capPce) break;
                     if (((dst-src) & 7) && !capPce && capSq != ep) break;
-                } if ((capPce & 7) == 1) return []; //moves.push([src, dst]);
+                } if ((capPce & 7) == 1) return [];
                 board[capSq] = 0; board[src] = 0; board[dst] = pce;
                 if (pceType == 1 && ((src == 116) || (src == 4))) {
                     switch(dst) {
@@ -63,9 +66,9 @@ function movegen(uSrc, uDst, uProm) {
                     if ((dst >> 4) == (side == 8 ? 0 : 7)) {
                         board[dst] = ((uProm > 0) ? uProm : 6) | side;
                         for (let p = 6; p > 2; p--)
-                        moves.push([src, dst, p]);
-                    } else moves.push([src, dst]);
-                } else moves.push([src, dst]);
+                        moves.push([src, dst, p, capPce]);
+                    } else moves.push([src, dst, 0, capPce]);
+                } else moves.push([src, dst, 0, capPce]);
                 if (src == uSrc && dst == uDst) {
                     ep = -1; if (pceType == 2) {
                         if (((src >> 4) == ((side == 8) ? 6 : 1)) &&
@@ -154,7 +157,7 @@ function ui(dst) {
         s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
     } for (let move of movegen(-1, -1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1)); let isLegal = 1;
+        movegen(move[0], move[1], move[2]); let isLegal = 1;
         if (!movegen(-1, -1, -1).length) isLegal = 0; board = JSON.parse(oldBoard);
         side = oldSide, ep = oldEp, castle = oldCastle;
         if (!isLegal) continue; if (dst == move[0]) {
@@ -197,7 +200,7 @@ nodes = 0; function perftDriver(depth, ply) {
     for (let move of movegen(-1, -1, -1)) {
         let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
         for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
-        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1));
+        movegen(move[0], move[1], move[2]);
         if (!movegen(-1, -1, -1).length) {
             for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
             side = oldSide, ep = oldEp, castle = oldCastle;
@@ -216,7 +219,7 @@ function perftTest(depth) {
     let count = 0;
     for (let move of movegen(-1, -1, -1)) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1));
+        movegen(move[0], move[1], move[2]);
         if (!movegen(-1, -1, -1).length) {
             board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
@@ -228,7 +231,7 @@ function perftTest(depth) {
             '   move' +
             ' ' + (count) + ((count < 9) ? ':  ' : ': ') + String.fromCharCode(97 + (move[0] & 7)) +
             (8 - (move[0] >> 4)) + String.fromCharCode(97 + (move[1] & 7)) + (8 - (move[1] >> 4)) +
-            '    nodes: ' + oldNodes
+            '  capture:' + (move[3]) + '    nodes: ' + oldNodes
         );
     }
     
