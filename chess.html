@@ -1,42 +1,12 @@
 <script>
 
 var board = new Array(128), side = 8, ep = -1, castle = 15;
-var offsets = [
-    [0], [-16, -1,  16,  1, -17, -15, 17, 15], [15, 16, 17],
-    [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
-    [-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]
-];
-
-let material = [0, 1000, 100, 300, 300, 400, 600, 900];
-let pst = Array(128).fill(0);
-
-var pvTable, pvLength;
-
-var prom = 6;
-var nodes = 0;
-var stop = 0;
-
-/*
-
-    Initial
-
-0	1	0	0	0	0	0	0	0	0
-1	20	0	0	0	0	0	0	0	0
-2	400	0	0	0	0	0	0	0	0
-3	8,902	34	0	0	0	12	0	0	0
-4	197,281	1576	0	0	0	469	0	0	8
-5	4,865,609	82,719	258	0	0	27,351	6	0	347
-6	119,060,324	2,812,008	5248	0	0	809,099	329	46	10,828
-
-    Kiwipete
-    
-    1	48	8	0	2	0	0	0	0	0
-2	2039	351	1	91	0	3	0	0	0
-3	97862	17102	45	3162	0	993	0	0	1
-4	4085603	757163	1929	128013	15172	25523	42	6	43
-5	193690690	35043416	73365	4993637	8392	3309887	19883	2637	30171
-
-*/
+var offsets = [ [0], [-16, -1,  16,  1, -17, -15, 17, 15],
+[15, 16, 17], [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
+[-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]
+]; let material = [0, 1000, 100, 300, 300, 400, 600, 900];
+let pst = Array(128).fill(0); var pvTable, pvLength;
+var prom = 6, nodes = 0, stop = 0;
 
 // Rules
 function movegen(uSrc, uDst, uProm) {
@@ -87,7 +57,7 @@ function movegen(uSrc, uDst, uProm) {
                             if (dst == 6) ep = 5;
                             if (dst == 2) ep = 3;
                         }
-                    } side = 24 - side; return 'make';
+                    } side = 24 - side; return 'move';
                 } board[dst] = 0; board[src] = pce; board[capSq] = capPce;
                 if (pceType == 1 && ((src == 116) || (src == 4))) {
                     switch(dst) {
@@ -179,7 +149,7 @@ function ui(dst) {
         else {
             if (src > 0 && src != dst) {
                 setTimeout(function() {
-                    let lastPV = []; stop = 0; let d = -1; while (++d <= 5) {
+                    let lastPV = []; stop = 0; let d = -1; while (++d <= 15) {
                         search(d, 0, -50000, 50000, 0, 0);
                         if (stop) break;
                         lastPV = JSON.parse(JSON.stringify(pvTable[0]));
@@ -200,17 +170,21 @@ function search(depth, ply, alpha, beta, caps, iid) {
         var start = Date.now(); nodes = 0;
         pvTable = Array.from({ length: 64 }, () => Array(64).fill(0));
         pvLength = new Array(64).fill(0);
-    } pvLength[ply] = ply; if (!depth) {
-        nodes++; //if (nodes > 300000) stop = 1;
+    } pvLength[ply] = ply; if (depth <= 0) {
+        nodes++; if (nodes > 250000) stop = 1;
         let score = 0; let sq = -1; while (++sq < 120) {
             if (sq & 0x88) continue;
-            let pce = board[sq]; if (pce) {
+            let pce = board[sq];
+            if (pce) {
                 let value = material[pce & 7] + pst[sq];
                 (pce & 8) ? (score += value) : (score -= value);
             }
-        } return (side == 8) ? score: -score;
+        } score = (side == 8) ? score : -score;
+        if (score >= beta) return beta;
+        if (score > alpha) alpha = score;
+        caps = 1;
     } let moves = movegen(-1, -1, -1);
-    if (depth >= 5) {
+    if (depth >= 5 && !caps) {
         search(depth-2, ply, alpha, beta, caps, 1);
         if (stop) return 0;
     } for (let current = 0; current < moves.length; current++) {
@@ -223,6 +197,7 @@ function search(depth, ply, alpha, beta, caps, iid) {
             break;
         }
     } for (let move of moves) {
+        if (caps && !move[3]) continue;
         let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
         for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
         movegen(move[0], move[1], move[2]);
@@ -230,7 +205,9 @@ function search(depth, ply, alpha, beta, caps, iid) {
             for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
             side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
-        }let score = -search(depth - 1, ply+1, -beta, -alpha, caps, 0);
+        } let reduction = (!(move[3]) && depth >= 4) ? 1 : 0;
+        let nextDepth = caps ? 0 : depth - 1 - reduction;
+        let score = -search(nextDepth, ply + 1, -beta, -alpha, caps, 0);
         for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
         side = oldSide, ep = oldEp, castle = oldCastle;
         if (stop) return 0;
