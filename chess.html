@@ -7,9 +7,14 @@ var offsets = [
     [-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]
 ];
 
+let material = [0, 1000, 100, 300, 300, 400, 600, 900];
+let pst = Array(128).fill(0);
+
+var pvTable, pvLength;
+
 var prom = 6;
 var nodes = 0;
-        
+
 /*
 
     Initial
@@ -138,7 +143,7 @@ function ui(dst) {
             display: grid;
             place-items: center;
             user-select: none;
-            border: 1px solid #777777;"
+            
             unselectable="on"
             onselectstart="return false;"
             onmousedown="return false;
@@ -149,6 +154,8 @@ function ui(dst) {
             board[i+80] = 0; board[i+96] = 10;
         } board[8] = 7; board[12] = 3; board[15] = 11;
         board[120] = 13; board[124] = 12; board[127] = 14;
+        for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++)
+        pst[16 * j + i] = 28.25 - (i - 4) ** 2 - (j - 3.5) ** 2; 
     } let lock = 0; for (let sq in board) {
         if (sq & 0x88) continue;
         if (document.getElementById(sq).classList[0] == "highlight") lock = 1;
@@ -162,42 +169,56 @@ function ui(dst) {
         side = oldSide, ep = oldEp, castle = oldCastle;
         if (!isLegal) continue; if (dst == move[0]) {
             let s = -1; while (++s < 2) document.getElementById(move[s]).classList.add('highlight');
-            src = dst; lock = 1;
+            src = dst;
         } 
     } if (lock) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
         movegen(src, dst, prom); if (!movegen(-1, -1, -1).length)
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        else {
+            if (src > 0 && src != dst) {
+                setTimeout(function() {
+                    search(5, 0, -50000, 50000, 0); src = -1; dst = -1; 
+                    movegen(pvTable[0][0][0], pvTable[0][0][1], pvTable[0][0][2]); ui();
+                    document.getElementById(pvTable[0][0][1]).classList.add('highlight');
+                }, 1);
+            }
+        }
+        
     }
 } ui();
 
-
-// DEBUG r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 
-board = [
-    21,  0,  0,  0, 17,  0,  0, 21,    7, 15, 15, 15,  3, 15, 15, 11,
-    18,  0, 18, 18, 22, 18, 20,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-    20, 19,  0,  0, 18, 19, 18,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-     0,  0,  0, 10, 11,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-     0, 18,  0,  0, 10,  0,  0,  0,   15, 15, 15, 15, 15, 15, 15, 15,
-     0,  0, 11,  0,  0, 14,  0, 18,   15, 15, 15, 15, 15, 15, 15, 15,
-    10, 10, 10, 12, 12, 10, 10, 10,   15, 15, 15, 15, 15, 15, 15, 15,
-    13,  0,  0,  0,  9,  0,  0, 13,   13, 15, 15, 15, 12, 15, 15, 14
-]; ui();
-        
-function print() {
-    let b = "";
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            let sq = r*16+c;
-            if (sq & 0x88) continue;
-            b += ".kpnbrq--KPNBRQ"[board[sq]&15];
-        } b += "\n";
-    } console.log(b, nodes);
+// Engine
+function ev() {
+    let score = 0;
+    let sq = -1; while (++sq < 120) {
+        if (sq & 0x88) continue;
+        let pce = board[sq]; if (pce) {
+            let value = material[pce & 7] + pst[sq];
+            (pce & 8) ? (score += value) : (score -= value);
+        }
+    } return (side == 8) ? score: -score;
 }
 
-nodes = 0; function perftDriver(depth, ply) {
-    if (!depth) { nodes++; return; }
-    for (let move of movegen(-1, -1, -1)) {
+//var stop = 0;
+function search(depth, ply, alpha, beta, caps) {  // search(4, 0, -50000, 50000, 0); ui();
+    if (!ply) {
+        var start = Date.now(); nodes = 0; //stop = 0;
+        pvTable = Array.from({ length: 64 }, () => Array(64).fill(0));
+        pvLength = new Array(64).fill(0);
+    }
+    
+    pvLength[ply] = ply;
+    
+    
+    
+    if (!depth) {
+        nodes++; //if (nodes > 1e6) { stop = 1; return 0; }
+        return ev();
+    }
+    
+    let moves = movegen(-1, -1, -1);
+    for (let move of moves) {
         let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
         for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
         movegen(move[0], move[1], move[2]);
@@ -205,41 +226,37 @@ nodes = 0; function perftDriver(depth, ply) {
             for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
             side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
-        } perftDriver(depth - 1, ply+1);
+        } let score = -search(depth - 1, ply+1, -beta, -alpha, caps);
         for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
         side = oldSide, ep = oldEp, castle = oldCastle;
-    }
-}
-
-function perftTest(depth) {
-    nodes = 0;
-    console.log('   Performance test:\n');
-    resultString = '';
-    let startTime = Date.now();
-    let count = 0;
-    for (let move of movegen(-1, -1, -1)) {
-        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
-        movegen(move[0], move[1], move[2]);
-        if (!movegen(-1, -1, -1).length) {
-            board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-            continue;
-        } let cumNodes = nodes;
-        perftDriver(depth - 1, 0);
-        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-        let oldNodes = nodes - cumNodes; count++;
-        console.log(
-            '   move' +
-            ' ' + (count) + ((count < 9) ? ':  ' : ': ') + String.fromCharCode(97 + (move[0] & 7)) +
-            (8 - (move[0] >> 4)) + String.fromCharCode(97 + (move[1] & 7)) + (8 - (move[1] >> 4)) +
-            '  capture:' + (move[3]) + '    nodes: ' + oldNodes
-        );
+        //if (stop) return 0;
+        if (score > alpha) {
+            alpha = score;
+			pvTable[ply][ply] = move;
+			for (let i = ply + 1; i < pvLength[ply + 1]; i++) pvTable[ply][i] = pvTable[ply + 1][i];
+			pvLength[ply] = pvLength[ply + 1];
+            if (score >= beta) return beta;
+        }      
     }
     
-    resultString += '\n   Depth: ' + depth;
-    resultString += '\n   Nodes: ' + nodes;
-    resultString += '\n    Time: ' + (Date.now() - startTime) + ' ms\n';
-    console.log(resultString);
-} //perftTest(4); ui();
-
+    if (!moves.length) {
+        return -49000 + ply;
+        //if (in_check) return -49000 + ply;
+        //else return 0;
+    }
+    
+    if (!ply) {
+        let pv = "";
+        for (let i = 0; i < pvLength[0]; i++) {
+            let move = pvTable[0][i];
+            pv += String.fromCharCode(97 + (move[0] & 7)) + (8 - (move[0] >> 4)) +
+                  String.fromCharCode(97 + (move[1] & 7)) + (8 - (move[1] >> 4)) +
+                  (move[2] ? String.fromCharCode(97 + move[2]) : "");
+            if (i < pvLength[0]-1) pv += " ";
+        } console.log(`score ${alpha} depth ${depth} nodes ${nodes} time ${Date.now() - start} pv ${pv}`);
+    }
+    
+    return alpha;
+}
 
 </script>
