@@ -146,10 +146,9 @@ function ui(dst) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
         movegen(src, dst, prom); if (!movegen(-1, -1, -1).length)
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-        else {
-            if (src > 0 && src != dst) {
+        else { if (src > 0 && src != dst) {
                 setTimeout(function() {
-                    let lastPV = []; stop = 0; let d = -1; while (++d <= 15) {
+                    let lastPV = []; stop = 0; let d = 0; while (++d <= 15) {
                         search(d, 0, -50000, 50000, 0, 0);
                         if (stop) break;
                         lastPV = JSON.parse(JSON.stringify(pvTable[0]));
@@ -171,7 +170,7 @@ function search(depth, ply, alpha, beta, caps, iid) {
         pvTable = Array.from({ length: 64 }, () => Array(64).fill(0));
         pvLength = new Array(64).fill(0);
     } pvLength[ply] = ply; if (depth <= 0) {
-        nodes++; if (nodes > 250000) stop = 1;
+        if (nodes > 250000) stop = 1;
         let score = 0; let sq = -1; while (++sq < 120) {
             if (sq & 0x88) continue;
             let pce = board[sq];
@@ -183,7 +182,7 @@ function search(depth, ply, alpha, beta, caps, iid) {
         if (score >= beta) return beta;
         if (score > alpha) alpha = score;
         caps = 1;
-    } let moves = movegen(-1, -1, -1);
+    } nodes++; let moves = movegen(-1, -1, -1);
     if (depth >= 5 && !caps) {
         search(depth-2, ply, alpha, beta, caps, 1);
         if (stop) return 0;
@@ -205,21 +204,22 @@ function search(depth, ply, alpha, beta, caps, iid) {
             for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
             side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
-        } let reduction = (!(move[3]) && depth >= 4) ? 1 : 0;
-        let nextDepth = caps ? 0 : depth - 1 - reduction;
-        let score = -search(nextDepth, ply + 1, -beta, -alpha, caps, 0);
+        } let nextDepth = caps ? 0 : depth - 1;
+        let score = -search(nextDepth, ply + 1, -beta, -alpha, caps, 0);        
         for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
         side = oldSide, ep = oldEp, castle = oldCastle;
         if (stop) return 0;
         if (score > alpha) {
             alpha = score;
-			pvTable[ply][ply] = move;
-			for (let i = ply + 1; i < pvLength[ply + 1]; i++) pvTable[ply][i] = pvTable[ply + 1][i];
-			pvLength[ply] = pvLength[ply + 1];
+		    pvTable[ply][ply] = move;
+		    for (let i = ply + 1; i < pvLength[ply + 1]; i++) pvTable[ply][i] = pvTable[ply + 1][i];
+		    pvLength[ply] = pvLength[ply + 1];
             if (score >= beta) return beta;
-        }      
+        }
     } if (!moves.length) {
         return -49000 + ply;
+        // TODO: distinguish check and mate
+        // avoid engine move if user gives illegal
         //if (in_check) return -49000 + ply;
         //else return 0;
     } if (!ply && !iid) {
