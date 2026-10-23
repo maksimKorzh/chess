@@ -14,6 +14,7 @@ var pvTable, pvLength;
 
 var prom = 6;
 var nodes = 0;
+var stop = 0;
 
 /*
 
@@ -178,9 +179,13 @@ function ui(dst) {
         else {
             if (src > 0 && src != dst) {
                 setTimeout(function() {
-                    search(5, 0, -50000, 50000, 0); src = -1; dst = -1; 
-                    movegen(pvTable[0][0][0], pvTable[0][0][1], pvTable[0][0][2]); ui();
-                    document.getElementById(pvTable[0][0][1]).classList.add('highlight');
+                    let lastPV = []; stop = 0; let d = -1; while (++d <= 5) {
+                        search(d, 0, -50000, 50000, 0, 0);
+                        if (stop) break;
+                        lastPV = JSON.parse(JSON.stringify(pvTable[0]));
+                    } src = -1; dst = -1; 
+                    movegen(lastPV[0][0], lastPV[0][1], lastPV[0][2]); ui();
+                    document.getElementById(lastPV[0][1]).classList.add('highlight');
                 }, 1);
             }
         }
@@ -189,36 +194,35 @@ function ui(dst) {
 } ui();
 
 // Engine
-function ev() {
-    let score = 0;
-    let sq = -1; while (++sq < 120) {
-        if (sq & 0x88) continue;
-        let pce = board[sq]; if (pce) {
-            let value = material[pce & 7] + pst[sq];
-            (pce & 8) ? (score += value) : (score -= value);
-        }
-    } return (side == 8) ? score: -score;
-}
-
-//var stop = 0;
-function search(depth, ply, alpha, beta, caps) {  // search(4, 0, -50000, 50000, 0); ui();
-    if (!ply) {
-        var start = Date.now(); nodes = 0; //stop = 0;
+function search(depth, ply, alpha, beta, caps, iid) {
+    if (stop) return 0;
+    if (!ply && !iid) {
+        var start = Date.now(); nodes = 0;
         pvTable = Array.from({ length: 64 }, () => Array(64).fill(0));
         pvLength = new Array(64).fill(0);
-    }
-    
-    pvLength[ply] = ply;
-    
-    
-    
-    if (!depth) {
-        nodes++; //if (nodes > 1e6) { stop = 1; return 0; }
-        return ev();
-    }
-    
-    let moves = movegen(-1, -1, -1);
-    for (let move of moves) {
+    } pvLength[ply] = ply; if (!depth) {
+        nodes++; //if (nodes > 300000) stop = 1;
+        let score = 0; let sq = -1; while (++sq < 120) {
+            if (sq & 0x88) continue;
+            let pce = board[sq]; if (pce) {
+                let value = material[pce & 7] + pst[sq];
+                (pce & 8) ? (score += value) : (score -= value);
+            }
+        } return (side == 8) ? score: -score;
+    } let moves = movegen(-1, -1, -1);
+    if (depth >= 5) {
+        search(depth-2, ply, alpha, beta, caps, 1);
+        if (stop) return 0;
+    } for (let current = 0; current < moves.length; current++) {
+        if (moves[current][0] == pvTable[ply][ply][0] &&
+            moves[current][1] == pvTable[ply][ply][1] &&
+            moves[current][2] == pvTable[ply][ply][2]) {
+            let temp = moves[0];
+            moves[0] = moves[current];
+            moves[current] = temp;
+            break;
+        }
+    } for (let move of moves) {
         let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
         for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
         movegen(move[0], move[1], move[2]);
@@ -226,10 +230,10 @@ function search(depth, ply, alpha, beta, caps) {  // search(4, 0, -50000, 50000,
             for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
             side = oldSide, ep = oldEp, castle = oldCastle;
             continue;
-        } let score = -search(depth - 1, ply+1, -beta, -alpha, caps);
+        }let score = -search(depth - 1, ply+1, -beta, -alpha, caps, 0);
         for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
         side = oldSide, ep = oldEp, castle = oldCastle;
-        //if (stop) return 0;
+        if (stop) return 0;
         if (score > alpha) {
             alpha = score;
 			pvTable[ply][ply] = move;
@@ -237,15 +241,11 @@ function search(depth, ply, alpha, beta, caps) {  // search(4, 0, -50000, 50000,
 			pvLength[ply] = pvLength[ply + 1];
             if (score >= beta) return beta;
         }      
-    }
-    
-    if (!moves.length) {
+    } if (!moves.length) {
         return -49000 + ply;
         //if (in_check) return -49000 + ply;
         //else return 0;
-    }
-    
-    if (!ply) {
+    } if (!ply && !iid) {
         let pv = "";
         for (let i = 0; i < pvLength[0]; i++) {
             let move = pvTable[0][i];
@@ -254,9 +254,8 @@ function search(depth, ply, alpha, beta, caps) {  // search(4, 0, -50000, 50000,
                   (move[2] ? String.fromCharCode(97 + move[2]) : "");
             if (i < pvLength[0]-1) pv += " ";
         } console.log(`score ${alpha} depth ${depth} nodes ${nodes} time ${Date.now() - start} pv ${pv}`);
-    }
-    
-    return alpha;
+    } return alpha;
 }
+
 
 </script>
