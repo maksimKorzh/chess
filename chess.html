@@ -187,6 +187,8 @@ function search(depth, ply, alpha, beta, caps, iid) {
             if (pce) {
                 let value = material[pce & 7] + pst[sq];
                 (pce & 8) ? (score += value) : (score -= value);
+                if (pce == 9 && (sq == 114 || sq == 118)) score += 20;
+                if (pce == 17 && (sq == 2 || sq == 6)) score -= 20;
             }
         } score = (side == 8) ? score : -score;
         if (score >= beta) return beta;
