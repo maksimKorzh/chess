@@ -1,12 +1,17 @@
 <script>
 
+// State
 var board = new Array(128), side = 8, ep = -1, castle = 15;
 var offsets = [ [0], [-16, -1,  16,  1, -17, -15, 17, 15],
 [15, 16, 17], [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
 [-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]
 ]; let material = [0, 1000, 100, 300, 300, 400, 600, 900];
 let pst = Array(128).fill(0); var pvTable, pvLength;
-var prom = 6, nodes = 0, stop = 0;
+var prom = 6, nodes = 0, stop = 0, engineSide = 16;
+let userSide = window.location.href.split("play=")[1];
+userSide == "white" ? (engineSide = 16) : (engineSide = 8); ui();
+if (engineSide == 8) ui(), document.getElementById(0).classList.add("highlight"),
+src = 0, ui();
 
 // Rules
 function movegen(uSrc, uDst, uProm) {
@@ -95,13 +100,18 @@ function movegen(uSrc, uDst, uProm) {
 function ui(dst) {
     if (document.getElementById("board") == null) {
         let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
-        let ui = ""; for (let i = 0; i < 120; i++)
-        ui += i & 8 && (i += 7) ? `<tr>` :`<th id="${i}"
-        onclick="let i = 2; while(i--) ui(parseInt(this.id));" style="
-            background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
-            width: ${size}px;
-            height: ${size}px;
-        ">`; document.write(`
+        let ui = ""; for (var row = 0; row < 8; row++) { ui += "<tr>";
+            for (var col = 0; col < 16; col++) {
+                if (engineSide == 8) { file = 16 - 1 - col; rank = 8 - 1 - row; }
+                else { file = col; rank = row; } let i = rank * 16 + file;
+                if (i & 0x88) continue; ui += `<th id="${i}"
+                onclick="let i = 2; while(i--) ui(parseInt(this.id));" style="
+                    background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
+                    width: ${size}px;
+                    height: ${size}px;
+                ">`;
+            }
+        } document.write(`
         <meta name="viewport" content="user-scalable=no">
         <style>
             .highlight { box-shadow: inset 0px 0px 3px 3px #ffbb00; }
@@ -114,7 +124,6 @@ function ui(dst) {
             display: grid;
             place-items: center;
             user-select: none;
-            
             unselectable="on"
             onselectstart="return false;"
             onmousedown="return false;
@@ -146,21 +155,22 @@ function ui(dst) {
         let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
         movegen(src, dst, prom); if (!movegen(-1, -1, -1).length)
         board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
-        else { if (src > 0 && src != dst) {
+        else { if (side == engineSide) { 
                 setTimeout(function() {
                     let lastPV = []; stop = 0; let d = 0; while (++d <= 15) {
                         search(d, 0, -50000, 50000, 0, 0);
                         if (stop) break;
+                        if (!pvLength[0]) break;
                         lastPV = JSON.parse(JSON.stringify(pvTable[0]));
-                    } src = -1; dst = -1; 
+                    } src = -1; dst = -1;
+                    if (!lastPV.length) return;
                     movegen(lastPV[0][0], lastPV[0][1], lastPV[0][2]); ui();
                     document.getElementById(lastPV[0][1]).classList.add('highlight');
                 }, 1);
             }
         }
-        
     }
-} ui();
+}
 
 // Engine
 function search(depth, ply, alpha, beta, caps, iid) {
@@ -216,12 +226,6 @@ function search(depth, ply, alpha, beta, caps, iid) {
 		    pvLength[ply] = pvLength[ply + 1];
             if (score >= beta) return beta;
         }
-    } if (!moves.length) {
-        return -49000 + ply;
-        // TODO: distinguish check and mate
-        // avoid engine move if user gives illegal
-        //if (in_check) return -49000 + ply;
-        //else return 0;
     } if (!ply && !iid) {
         let pv = "";
         for (let i = 0; i < pvLength[0]; i++) {
@@ -233,6 +237,5 @@ function search(depth, ply, alpha, beta, caps, iid) {
         } console.log(`score ${alpha} depth ${depth} nodes ${nodes} time ${Date.now() - start} pv ${pv}`);
     } return alpha;
 }
-
 
 </script>
