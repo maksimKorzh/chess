@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: #f3f6f8;
+            color: #24313a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: #167a8a;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #0d5d69;
+            text-decoration: underline;
+        }
+
+        .book {
+            width: min(900px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 36px 0 48px;
+        }
+
+        article,
+        .book-index {
+            background: #ffffff;
+            border: 1px solid #dce5e9;
+            border-radius: 10px;
+            padding: 42px 52px;
+            box-shadow: 0 5px 20px rgba(36, 49, 58, 0.05);
+        }
+
+        .book-header {
+            margin-bottom: 36px;
+            text-align: center;
+        }
+
+        .book-header h1 {
+            margin: 0 0 8px;
+            color: #16323a;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+        }
+
+        .book-header p {
+            margin: 0;
+            color: #60727a;
+            font-size: 1.05rem;
+        }
+
+        .book-kicker {
+            margin-bottom: 10px;
+            color: #6b7d84;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .book-header .subtitle {
+            margin: 8px 0 0;
+            color: #3e5962;
+            font-size: 1.3rem;
+            font-weight: 400;
+        }
+
+        .book-header .description {
+            max-width: 650px;
+            margin: 10px auto 0;
+            color: #60727a;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            color: #16323a;
+            line-height: 1.25;
+        }
+
+        h2 {
+            margin: 2.2em 0 0.7em;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dcebed;
+            font-size: 1.65rem;
+        }
+
+        h3 {
+            margin: 1.8em 0 0.6em;
+            font-size: 1.25rem;
+        }
+
+        p {
+            margin: 0 0 1.1em;
+        }
+
+        article p {
+            font-size: 1rem;
+        }
+
+        article .lead {
+            color: #405760;
+            font-size: 1.1rem;
+        }
+
+        ul,
+        ol {
+            padding-left: 1.5em;
+        }
+
+        li {
+            margin-bottom: 0.45em;
+        }
+
+        strong {
+            color: #193c45;
+        }
+
+        code {
+            padding: 0.15em 0.35em;
+            border-radius: 4px;
+            background: #edf2f4;
+            color: #b04444;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            margin: 1.5em 0;
+            padding: 18px 20px;
+            overflow-x: auto;
+            border: 1px solid #d9e3e7;
+            border-radius: 7px;
+            background: #f7f9fa;
+            color: #26343b;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            tab-size: 4;
+        }
+
+        pre code {
+            padding: 0;
+            background: transparent;
+            color: inherit;
+            font-size: inherit;
+        }
+
+        blockquote {
+            margin: 1.5em 0;
+            padding: 12px 18px;
+            border-left: 4px solid #2b9aaa;
+            background: #f0f7f8;
+            color: #52656d;
+        }
+
+        .note {
+            margin: 1.8em 0;
+            padding: 18px 20px;
+            border-left: 4px solid #2b9aaa;
+            border-radius: 0 6px 6px 0;
+            background: #f0f7f8;
+            color: #52656d;
+        }
+
+        .note-title {
+            margin-bottom: 6px;
+            color: #23434b;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .note p {
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            margin: 1.5em 0;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border: 1px solid #dce5e9;
+            text-align: left;
+        }
+
+        th {
+            background: #edf4f5;
+            color: #23434b;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 1.5em auto;
+            border-radius: 6px;
+        }
+
+        .page-top {
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+
+        .page-top a {
+            display: inline-block;
+            padding: 5px 0;
+        }
+
+        .chapter {
+            padding-top: 10px;
+        }
+
+        .chapter-label {
+            margin: 0 0 10px;
+            color: #668089;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .chapter h2 {
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #dce5e9;
+        }
+
+        .chapter-nav a {
+            color: #607b84;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .chapter-nav a:hover {
+            color: #176f7d;
+            text-decoration: none;
+        }
+
+        .chapter-nav-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-top: 42px;
+            padding-top: 22px;
+            border-top: 1px solid #dce5e9;
+        }
+
+        .chapter-nav-bottom a {
+            display: block;
+            color: #176f7d;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+
+        .chapter-nav-bottom a:hover {
+            color: #0d5d69;
+            text-decoration: none;
+        }
+
+        .chapter-nav-bottom .next {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .book-navigation {
+            display: flex;
+            margin-top: 28px;
+        }
+
+        .book-navigation-center {
+            justify-content: center;
+        }
+
+        .book-navigation a {
+            color: #607b84;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .book-navigation a:hover {
+            color: #176f7d;
+            text-decoration: none;
+        }
+
+        .book-index .contents {
+            margin-top: 30px;
+        }
+
+        .book-index .contents h2 {
+            margin-top: 0;
+        }
+
+        .book-index .contents ol {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .book-index .contents li {
+            margin: 0;
+        }
+
+        .book-index .contents a {
+            display: flex;
+            gap: 14px;
+            padding: 8px 0;
+            border-bottom: 1px dotted #d6e1e5;
+            color: #24313a;
+            text-decoration: none;
+        }
+
+        .book-index .contents a:hover {
+            color: #167a8a;
+            text-decoration: none;
+        }
+
+        .book-index .contents a span {
+            width: 32px;
+            flex-shrink: 0;
+            color: #819097;
+        }
+
+        .chapter-end {
+            margin-top: 26px;
+            color: #819097;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        hr {
+            margin: 28px 0 0;
+            border: 0;
+            border-top: 1px solid #dce5e9;
+        }
+
+        @media (max-width: 700px) {
+            .book {
+                width: 100%;
+                padding: 0;
+            }
+
+            article,
+            .book-index {
+                min-height: 100vh;
+                border: 0;
+                border-radius: 0;
+                padding: 28px 20px 36px;
+                box-shadow: none;
+            }
+
+            body {
+                font-size: 15px;
+            }
+
+            .book-header {
+                margin-bottom: 28px;
+            }
+
+            .book-header .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .book-header .description {
+                font-size: 0.95rem;
+            }
+
+            h2 {
+                font-size: 1.45rem;
+            }
+
+            h3 {
+                font-size: 1.15rem;
+            }
+
+            article p {
+                font-size: 0.98rem;
+            }
+
+            article .lead {
+                font-size: 1.05rem;
+            }
+
+            pre {
+                margin-left: -4px;
+                margin-right: -4px;
+                padding: 14px;
+                border-radius: 5px;
+                font-size: 0.8rem;
+            }
+
+            .chapter-nav {
+                margin-bottom: 26px;
+            }
+
+            .chapter-nav-bottom {
+                margin-top: 36px;
+            }
+
+            .chapter-nav-bottom a {
+                font-size: 0.88rem;
+            }
+
+            .book-navigation {
+                margin-top: 24px;
+            }
+
+            .note {
+                padding: 15px 16px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .chapter-nav-bottom {
+                align-items: flex-start;
+            }
+
+            .chapter-nav-bottom .next {
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="book">
+        <header class="book-header">
+            <div class="book-kicker">EFFICIENT CHESS PROGRAMMING</div>
+            <h1>COMPACT CHESS</h1>
+            <p class="subtitle">in under 250 lines of plain JavaScript</p>
+            <p class="description">
+                Learn how to compress a chess engine into three core functions and reuse multiple
+                mechanics within inside them without creating tons of repetetive code.
+            </p>
+        </header>
+        <article class="chapter">
+            <h2>Introduction</h2>
+            <h3>A Chess Engine in Fewer Than 250 Lines</h3>
+            <p class="lead">What if you could build a working chess engine in JavaScript using fewer than 250 lines of code? Not a collection of disconnected examples, not a simplified demonstration that can only make a few moves, but a real chess engine with move generation, a search algorithm, and a graphical interface that lets you play against it. That is exactly what we are going to explore in this book.</p>
+            <p>Chess programming is a fascinating combination of algorithms, data structures, optimization, and problem-solving. At first glance, a chess engine might seem like a complicated piece of software that requires thousands of lines of code and an elaborate architecture. And indeed, modern competitive chess engines can be enormous projects, containing highly sophisticated search algorithms, evaluation functions, and numerous performance optimizations.</p>
+            <p>But there is another way to approach the problem. Instead of trying to build the strongest possible engine, we can focus on something equally interesting: building a functional chess engine while keeping the code remarkably small.</p>
+            <p>Our goal is not to compete with the world's strongest chess programs. It is to understand how a chess engine works, how its essential components fit together, and how careful programming can produce a useful result without drowning us in unnecessary complexity.</p>
+            <h3>One HTML File, One Script, One Engine</h3>
+            <p>The entire project lives in a single HTML file. Inside that file, we have one script tag containing both the chess engine and the graphical user interface. There is no separate JavaScript application, no collection of modules, no build system, and no framework that we need to install before we can start experimenting.</p>
+            <p>You can open the file, inspect the source code, and see how the application works from beginning to end. The interface and the engine are right there together, in one place.</p>
+            <p>This is a deliberate design decision. Separating code into multiple files is often beneficial for larger projects, but it is not always necessary for a small, self-contained application. When our objective is to understand an algorithm and experiment with it, keeping everything together makes the entire system easier to explore.</p>
+            <p>There is also something satisfying about being able to share a complete chess engine as a single HTML file. No installation process, no complicated project setup, and no dependency on a large software ecosystem. You have the source code, a browser, and a chessboard ready to play.</p>
+            <div class="note">
+                <div class="note-title">The Entire Project at a Glance</div>
+                <p>Our chess engine is written in JavaScript and contains fewer than 250 lines of code. The engine and graphical interface live together inside a single HTML file, making the project easy to read, run, modify, and experiment with.</p>
+            </div>
+            <h3>Three Functions, Three Responsibilities</h3>
+            <p>One of the most interesting aspects of this project is that its essential functionality can be organized around just three main functions: <code>movegen()</code>, <code>search()</code>, and <code>ui()</code>.</p>
+            <p>Each function has a clear responsibility. Together, they form the application.</p>
+            <p>The first function, <code>movegen()</code>, generates the moves available in a chess position. A chess engine needs to understand how the pieces move, which squares they can reach, and which moves are permitted by the rules of chess. Move generation provides the foundation on which the rest of the engine operates.</p>
+            <p>The second function, <code>ui()</code>, draws the chessboard and handles interaction with the user. It provides the visual part of the application, allowing you to see the current position, make moves, and play against the engine.</p>
+            <p>The third function, <code>search()</code>, looks for the best move. Generating possible moves is only the beginning: the engine must also examine possible continuations and decide which move appears most promising. This is where the engine starts behaving like a chess-playing program rather than simply a collection of chess rules.</p>            
+            <p>These three functions represent three different problems: understanding the rules, presenting the game to the player and choosing a best move. By keeping their responsibilities distinct, we can understand the architecture without introducing a large number of additional functions or layers of abstraction.</p>
+            <div class="note">
+                <div class="note-title">The Three Core Functions</div>
+                <p><code>movegen()</code> generates moves. <code>ui()</code> draws the board and lets the user play. <code>search()</code> finds the best move. These three functions form the entire application.</p>
+            </div>
+            <h3>Efficient Code Is Optimization Target</h3>
+            <p>When programmers talk about optimization, they often think exclusively about execution speed. A faster algorithm, fewer calculations, or a more efficient data structure can make a program run better.</p>
+            <p>But there is another kind of optimization that is particularly interesting for small projects: optimizing the size of the implementation itself.</p>
+            <p>In this book, code size is an important design constraint. We want to accomplish as much as possible with as little code as reasonably practical. That encourages us to question unnecessary abstractions, avoid repetitive implementations, and look for compact ways to express common operations.</p>
+            <p>However, compact code is not automatically efficient code. A shorter implementation is not necessarily faster, and removing every descriptive name or line break would make a program harder to understand rather than better designed. The challenge is to find a useful balance between brevity, performance, and readability.</p>
+            <p>JavaScript makes this experiment particularly accessible. It runs directly in modern browsers and provides everything we need to build an interactive chess application. We can focus on the engine itself rather than spending our time configuring a complicated development environment.</p>
+            <h3>Who Is This Book For?</h3>
+            <p>This book is for anyone curious about how chess engines work and interested in learning through a compact, practical implementation.</p>
+            <p>If you are learning JavaScript, the project gives you an opportunity to work with functions, conditional logic, loops, data representation, and algorithms in a meaningful context. Rather than studying isolated examples, you can see how these concepts cooperate inside a complete application.</p>
+            <p>If you already know how to program, the project offers a different kind of challenge. You can explore how to reduce code duplication, express algorithms concisely, and make deliberate trade-offs between code size, clarity, and performance.</p>
+            <p>And if you simply enjoy chess, you can explore the machinery behind a program that chooses its own moves.</p>
+            <p>You do not need to be an expert in artificial intelligence, advanced mathematics, or software architecture to get started. What matters most is curiosity and a willingness to examine how the pieces fit together.</p>
+            <h3>What We Are Going to Build</h3>
+            <p>By the end of this book, you will understand the structure of a small JavaScript chess engine and how its core components cooperate to create a playable application.</p>
+            <p>You will explore move generation, the search for promising moves, and the graphical interface that allows a human to play against the engine. Along the way, you will see how these responsibilities can be organized into a compact implementation without relying on a large collection of duplicated code.</p>
+            <p>The final result is deliberately modest in size but ambitious in what it demonstrates: a chess engine written in JavaScript, contained in a single HTML file, with fewer than 250 lines of code.</p>
+            <p>There is something satisfying about such a small program doing something that initially appears so complicated. It reminds us that understanding a problem is often more valuable than throwing more code at it.</p>           
+            <p>That is the central idea of this book: <strong>understand the algorithm, eliminate unnecessary complexity, and build a chess engine with remarkably little code.</strong></p>
+            <h3>Representing the Chessboard</h3>
+            <p class="lead">Before our engine can generate moves or search for the best one, it needs a way to represent a chess position. We need to know which pieces occupy which squares, whose turn it is, whether castling is possible, and whether an en passant capture is available. In a larger chess engine, this information might be spread across several structures and modules. In our implementation, we keep the essential state in a small collection of variables and arrays.</p>
+            <pre><code>// State
+var board = new Array(128), side = 8, ep = -1, castle = 15;
+var offsets = [ [0], [-16, -1,  16,  1, -17, -15, 17, 15],
+[15, 16, 17], [-33, -31, 33, 31, -18, -14, 18, 14], [-17, -15, 17, 15],
+[-16, -1, 16, 1], [-16,  -1, 16,  1, -17, -15, 17, 15]
+]; let material = [0, 1000, 100, 300, 300, 400, 600, 900];
+let pst = Array(128).fill(0); var pvTable, pvLength;
+var prom = 6, nodes = 0, stop = 0, engineSide = 16;
+let userSide = window.location.href.split("play=")[1];
+userSide == "white" ? (engineSide = 16) : (engineSide = 8); ui();
+if (engineSide == 8) ui(), document.getElementById(0).classList.add("highlight"),
+src = 0, ui();</code></pre>
+            <p>Let's start with the first line of our engine:</p>
+            <p><code>var board = new Array(128), side = 8, ep = -1, castle = 15;</code></p>
+            <p>This single line initializes four important pieces of information. The <code>board</code> array represents the chessboard, <code>side</code> identifies the side to move, <code>ep</code> stores the en passant target square, and <code>castle</code> tracks the remaining castling rights.</p>
+            <p>Notice how several variables are declared in one statement. JavaScript allows us to do this, and it helps keep the initialization compact. We will use this style throughout the engine whenever it improves code density without making the implementation unnecessarily difficult to follow.</p>
+            <h3>The 0x88 Board Representation</h3>
+            <p>The most interesting part of the initialization is the size of our board array: 128 elements.</p>
+            <p>A conventional chessboard contains only 64 squares, so why do we allocate twice that number? The answer is a representation technique known as the <strong>0x88 board</strong>.</p>
+            <p>Instead of arranging the 64 playable squares consecutively in a one-dimensional array, we represent the board as an eight-by-sixteen grid. Only the first eight squares of each row belong to the actual chessboard. The remaining eight positions are unused and help us detect when a move goes off the board.</p>
+            <p>Every square can be represented by an integer from 0 to 127. The low four bits identify the file, while the remaining bits identify the rank. In practical terms, we can calculate a square's file using <code>square &amp; 7</code> and its rank using <code>square &gt;&gt; 4</code>.</p>
+            <p>The real advantage appears when we generate moves. If a square is outside the board, the expression <code>square &amp; 0x88</code> will be nonzero. We can therefore detect an invalid square with a simple bitwise operation rather than checking its rank and file separately.</p>
+            <p>For example, consider moving a rook horizontally toward the edge of the board. With the 0x88 representation, we can keep adding the rook's movement offset and check whether the resulting square is valid. As soon as the move reaches an off-board position, the test identifies it immediately.</p>
+            <p>This technique makes move generation compact and straightforward. We spend a few extra array positions to simplify one of the most frequent operations in the engine: determining whether a square exists on the board.</p>
+            <div class="note">
+                <div class="note-title">Why 128 Squares?</div>
+                <p>The 0x88 representation uses a 16-by-8 array, but only 64 positions correspond to playable squares. The extra positions make off-board detection particularly simple: <code>square &amp; 0x88</code> is nonzero when the square lies outside the chessboard.</p>
+            </div>
+            <h3>Piece Encoding</h3>
+            <p>Before we can generate moves, we need a compact way to represent the pieces on our board. We encode each piece as a small integer whose individual bits carry different pieces of information.</p>
+            <p>The two most important bits identify the color. If bit 8 is set, the piece is White. If bit 16 is set, the piece is Black. The remaining bits encode the piece type, allowing the engine to determine whether a piece is a king, pawn, knight, bishop, rook, or queen.</p>
+            <p>Our piece types use the following values: <code>0</code> represents an empty square, <code>1</code> a king, <code>2</code> a pawn, <code>3</code> a knight, <code>4</code> a bishop, <code>5</code> a rook, and <code>6</code> a queen. Combining the piece type with its color produces a single integer that tells us everything we need to know about the piece.</p>
+            <p>For example, a white pawn is represented by setting the White bit and combining it with the pawn type. A black queen uses the Black bit combined with the queen type. This makes it possible to identify both the color and the type of a piece using simple bitwise operations rather than maintaining separate variables or objects for each piece.</p>
+            <p>There is another useful detail in our encoding. Bit 4 identifies sliding pieces. Bishops, rooks, and queens have this bit set, while kings, pawns, and knights do not. This distinction becomes particularly handy during move generation because sliding pieces can continue moving in the same direction across multiple squares, whereas leaping pieces move directly to their destinations.</p>
+            <p>By encoding this property directly into the piece representation, we can test whether a piece is a slider with a simple bitwise operation. We do not need to maintain another lookup table or write a separate check for every sliding piece type.</p>
+            <p>This is a small example of the design philosophy behind our engine: store useful information directly in the representation so that the code using it can remain compact and efficient.</p>
+            <h3>Piece Movement With Offsets</h3>
+            <p>Next, we have the <code>offsets</code> array:</p>
+            <p><code>var offsets = [ ... ];</code></p>
+            <p>This array stores the directions in which different pieces can move. Rather than writing separate coordinate calculations for every direction, we represent movement as integer offsets that can be added directly to a square index.</p>
+            <p>On our 0x88 board, moving one rank upward or downward changes the square index by 16. Moving one file left or right changes it by 1. Diagonal movement combines these changes, producing offsets such as <code>-17</code>, <code>-15</code>, <code>17</code>, and <code>15</code>.</p>
+            <p>For example, a rook uses the offsets <code>-16</code>, <code>-1</code>, <code>16</code>, and <code>1</code>. A bishop uses the four diagonal offsets. A queen can move in all eight directions, so it combines the rook's and bishop's directions.</p>
+            <p>Knight movement works in the same general way, although its offsets are different because a knight moves two squares in one direction and one square perpendicular to it. Those jumps are represented by offsets such as <code>-33</code>, <code>-31</code>, <code>-18</code>, and <code>-14</code>, together with their corresponding positive counterparts.</p>
+            <p>The array contains entries for the different piece types, with the exact index-to-piece mapping determined by the engine's internal encoding. The important idea is that each piece type can refer to its own collection of movement offsets.</p>
+            <p>There is a subtle but important detail here: offsets alone do not describe every rule of chess. Sliding pieces can continue along a direction until they encounter another piece or leave the board, while knights jump directly to their destinations. Pawns also have special rules for forward movement, captures, promotion, and en passant. The move-generation function uses the relevant offsets together with these rules to produce the moves appropriate for each piece.</p>
+            <p>This is a good example of how a carefully chosen representation can simplify an algorithm. Instead of repeatedly converting between rank-and-file coordinates, the engine can work directly with integer square indices.</p>
+            <h3>Material Values</h3>
+            <p>Our next variable is the <code>material</code> array:</p>
+            <p><code>let material = [0, 1000, 100, 300, 300, 400, 600, 900];</code></p>
+            <p>This array stores the material values associated with the engine's internal piece codes. When the engine evaluates a position, it needs some way to estimate the relative value of the pieces belonging to each side.</p>
+            <p>For example, a pawn is assigned a value of 100, a knight and bishop each receive 300, a rook receives 400, and a queen receives 900. The king has a value of 1000 in this particular table, although a king's value in a chess engine is not directly comparable to the ordinary material value of a queen or rook. The king cannot be captured in a legal game, and its safety must be handled according to the engine's search and evaluation logic.</p>
+            <p>Why use numbers such as 100, 300, and 900 instead of fractions such as 1, 3, and 9? Integer values are convenient for compact evaluation code. They also leave room for additional positional terms to be expressed using the same scale.</p>
+            <p>The values are not universal truths about chess. A knight and a bishop do not always have exactly the same practical strength, and the value of a piece depends on the position. These numbers are simply a useful starting point for estimating material balance.</p>
+            <p>By storing the values in an array, the engine can retrieve a piece's value through its encoded type rather than using a long chain of conditional statements. This is both compact and convenient.</p>
+            <h3>Piece-Square Tables</h3>
+            <p>Immediately after the material values, we initialize another array:</p>
+            <p><code>let pst = Array(128).fill(0);</code></p>
+            <p>The name <code>pst</code> stands for piece-square table. A piece-square table can assign positional bonuses or penalties depending on where a piece is located. A knight near the center of the board, for example, is often more useful than a knight trapped on the edge.</p>
+            <p>In our initialization, every entry is set to zero. This gives the engine a ready-made table that can be populated or updated with positional values later. At this stage, the initialization itself does not give any square a positional advantage; every entry begins with the same value.</p>
+            <p>Notice that the array has 128 elements, just like our board. This keeps square indexing consistent with the 0x88 representation. We can use a square index directly without converting it into a separate 64-square coordinate system.</p>
+            <p>This is another example of a small implementation choice that helps the rest of the engine stay compact. When different parts of the program share the same representation, we avoid unnecessary conversions and additional bookkeeping.</p>
+            <h3>Search State and Move Promotion</h3>
+            <p>We then declare a few more variables:</p>
+            <p><code>var pvTable, pvLength;</code></p>
+            <p>The names refer to the principal variation table and its associated length information. In chess search, the principal variation is the sequence of moves the engine currently considers its best continuation. Information about this line can help the engine organize its search and examine promising moves earlier.</p>
+            <p>Move ordering is important because a chess engine usually has more possible variations to examine than it can afford to explore exhaustively. If promising moves are considered first, the search may be able to eliminate less useful alternatives sooner. The principal variation can therefore provide valuable guidance during the search.</p>
+            <p>The exact use of these variables depends on the implementation of <code>search()</code>, but their purpose is to support the engine's search process without requiring a separate, elaborate search subsystem.</p>
+            <p>Next comes:</p>
+            <p><code>var prom = 6, nodes = 0, stop = 0, engineSide = 16;</code></p>
+            <p>The variable <code>prom</code> specifies the piece used for pawn promotion. In this engine, the default is the queen, which is the usual choice in ordinary play. A pawn that reaches the final rank can promote to a more powerful piece, and a queen is generally the most useful option.</p>
+            <p>The variable <code>nodes</code> counts the positions or search nodes examined by the engine. Tracking this number provides a simple way to limit the amount of work performed during a search. The <code>stop</code> variable acts as a stop flag, allowing the search to terminate when the relevant stopping condition is reached. In our implementation, this can be used to stop searching after a node-count threshold has been met.</p>
+            <p>Finally, <code>engineSide</code> identifies the side played by the computer. Its initial value is set to 16, and the initialization code below determines which side the engine should play.</p>
+            <h3>Choosing White or Black</h3>
+            <p>The next few lines connect the engine to the page URL:</p>
+            <p><code>let userSide = window.location.href.split("play=")[1];</code></p>
+            <p>This reads the current page URL and extracts the portion that follows <code>play=</code>. The resulting value is used to determine which side the human player wants to play.</p>
+            <p>The following conditional expression makes the choice:</p>
+            <p><code>userSide == "white" ? (engineSide = 16) : (engineSide = 8);</code></p>
+            <p>If the URL specifies <code>play=white</code>, the engine is assigned the black side. Otherwise, it is assigned the white side. The values 8 and 16 are internal side identifiers used by the engine; they are not the literal names of the colors.</p>
+            <p>This is a compact way to let the same application support both playing as White and playing as Black. There is no need to maintain two separate versions of the interface or engine.</p>
+            <p>There is one practical caveat: this expression assumes that the URL contains the expected parameter and value. A production application might parse URL parameters more robustly with <code>URLSearchParams</code>, but the compact approach illustrates the basic idea clearly.</p>
+            <h3>Drawing the Board and Initializing the Game</h3>
+            <p>After choosing the engine's side, we call:</p>
+            <p><code>ui();</code></p>
+            <p>This invokes the user-interface function, which draws the board from the appropriate perspective. The same underlying chess position can be presented from White's side or Black's side, depending on which color the human is playing.</p>
+            <p>The final conditional handles the initial setup when the engine plays White:</p>
+            <p><code>if (engineSide == 8) ui(), document.getElementById(0).classList.add("highlight"), src = 0, ui();</code></p>
+            <p>When this condition is true, the code calls <code>ui()</code>, adds the CSS class <code>highlight</code> to the element with the ID <code>0</code>, sets <code>src</code> to zero, and calls <code>ui()</code> again.</p>
+            <p>The exact significance of the highlighted square and the <code>src</code> variable depends on how the interface handles selection and the initial position. The important point is that this block performs additional interface setup for the case where the engine plays White. Rather than creating a separate initialization system, it reuses the same UI function.</p>
+            <p>This compact style is typical of the project: the engine and interface share a small set of state variables and functions, and the startup logic configures them according to the selected playing side.</p>
+            <h2>Building the User Interface</h2>
+            <p>Now we can move on to the <code>ui()</code> function, which connects our chess engine to the user. It draws the board, displays the pieces, highlights legal moves, handles the player's selections, and starts the engine's search when it is time for the computer to move.</p>
+            <p>We deliberately start with the user interface rather than waiting until the move generator and search are complete. This gives us a convenient way to debug the engine as we build it. For example, we can click a piece and inspect the highlighted destination squares to see whether the engine generates the moves we expect. A graphical board makes mistakes much easier to spot than a list of square numbers printed in a console. We can test the move generator visually from the beginning, even before the engine knows how to choose its own moves.</p>
+            
+            <pre><code><xmp>// GUI
+function ui(dst) {
+    if (document.getElementById("board") == null) {
+        let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;
+        let ui = ""; for (var row = 0; row < 8; row++) { ui += "<tr>";
+            for (var col = 0; col < 16; col++) {
+                if (engineSide == 8) { file = 16 - 1 - col; rank = 8 - 1 - row; }
+                else { file = col; rank = row; } let i = rank * 16 + file;
+                if (i & 0x88) continue; ui += `<th id="${i}"
+                onclick="let i = 2; while(i--) ui(parseInt(this.id));" style="
+                    background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};
+                    width: ${size}px;
+                    height: ${size}px;
+                ">`;
+            }
+        } document.write(`
+        <meta name="viewport" content="user-scalable=no">
+        <style>.highlight { box-shadow: inset 0px 0px 3px 3px #ffbb00; }</style>
+        <table id="board" style="
+            font-size: ${size-40}px;
+            cursor:default;
+            border-spacing: 0px;
+            display: grid;
+            place-items: center;
+            user-select: none;
+            unselectable="on"
+            onselectstart="return false;"
+            onmousedown="return false;
+        ">${ui}</table>`); board.fill(15);
+        let i = 8; while (i--) {
+            board[i] = (board[i+112] = [13, 11, 12, 14, 9, 12, 11, 13][i])+8;
+            board[i+16] = 18; board[i+32] = 0; board[i+48] = 0; board[i+64] = 0;
+            board[i+80] = 0; board[i+96] = 10;
+        } board[8] = 7; board[12] = 3; board[15] = 11;
+        board[120] = 13; board[124] = 12; board[127] = 14;
+        for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++)
+        pst[16 * j + i] = 28.25 - (i - 4) ** 2 - (j - 3.5) ** 2; 
+    } let lock = 0; for (let sq in board) {
+        if (sq & 0x88) continue;
+        if (document.getElementById(sq).classList[0] == "highlight") lock = 1;
+        s=document.getElementById(sq);
+        s.classList.remove('highlight');
+        s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&15];
+    } for (let move of movegen(-1, -1, -1)) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        movegen(move[0], move[1], move[2]); let isLegal = 1;
+        if (!movegen(-1, -1, -1).length) isLegal = 0; board = JSON.parse(oldBoard);
+        side = oldSide, ep = oldEp, castle = oldCastle;
+        if (!isLegal) continue; if (dst == move[0]) {
+            let s = -1; while (++s < 2) document.getElementById(move[s]).classList.add('highlight');
+            src = dst;
+        } 
+    } if (lock) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        movegen(src, dst, prom); if (!movegen(-1, -1, -1).length)
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        else { if (side == engineSide) { 
+                setTimeout(function() {
+                    let lastPV = []; stop = 0; let d = 0; while (++d <= 15) {
+                        search(d, 0, -50000, 50000, 0, 0);
+                        if (stop) break;
+                        if (!pvLength[0]) break;
+                        lastPV = JSON.parse(JSON.stringify(pvTable[0]));
+                    } src = -1; dst = -1;
+                    if (!lastPV.length) return;
+                    movegen(lastPV[0][0], lastPV[0][1], lastPV[0][2]); ui();
+                    document.getElementById(lastPV[0][1]).classList.add('highlight');
+                }, 1);
+            }
+        }
+    }
+}</xmp></code></pre>
+            <p>Our function accepts one optional argument, <code>dst</code>, representing a destination square selected by the user. When we call <code>ui()</code> without an argument, it updates the board and processes the current game state. When we call it with a square index, it can also highlight the legal destinations associated with that square.</p>
+            <h3>Creating the Board Only Once</h3>
+            <p>We begin by checking whether the HTML board already exists:</p>
+            <p><code>if (document.getElementById("board") == null) {</code></p>
+            <p>The first time <code>ui()</code> runs, there is no element with the ID <code>board</code>, so we enter this block and create the board. On subsequent calls, the board already exists, and we skip its creation. This distinction is important because we will call <code>ui()</code> repeatedly throughout the game. We want to update the existing board, not rebuild the entire page after every move.</p>
+            <p>Next, we calculate the size of each square:</p>
+            <p><code>let size = (Math.floor(Math.min(window.innerWidth, window.innerHeight) / 8)) - 2;</code></p>
+            <p><code>window.innerWidth</code> and <code>window.innerHeight</code> give us the dimensions of the browser's viewport. We take the smaller of the two so that the board can fit within either the available width or the available height. Dividing by eight gives us an approximate square size, since the chessboard has eight squares along each side. <code>Math.floor()</code> rounds the result down to an integer, and subtracting two pixels leaves a little room for spacing and other layout details.</p>
+            <p>This is a simple responsive sizing strategy: the board adapts to the browser window without requiring a separate stylesheet for different screen sizes.</p>
+            <h3>Generating the HTML Squares</h3>
+            <p>We prepare a string that will eventually contain the board's HTML:</p>
+            <p><code>let ui = "";</code></p>
+            <p>We then use two nested loops to generate the rows and squares:</p>
+            <p><code>for (var row = 0; row &lt; 8; row++) { ui += "&lt;tr&gt;";</code></p>
+            <p>The outer loop runs eight times, once for each row. At the beginning of every iteration, we append an opening <code>&lt;tr&gt;</code> tag, which starts a new table row.</p>
+            <p>Inside it, the inner loop runs sixteen times:</p>
+            <p><code>for (var col = 0; col &lt; 16; col++) {</code></p>
+            <p>At first glance, sixteen columns might seem like a mistake. Our chessboard has only eight files, after all. The reason is our 0x88 board representation. Each rank occupies sixteen array positions, even though only eight of those positions correspond to real squares. The other eight are padding positions that help us detect the edge of the board efficiently.</p>
+            <p>We use the same layout when constructing the HTML, then skip the padding positions. This keeps the board-generation code aligned with the engine's internal square numbering.</p>
+            <p>Before deciding which square to create, we determine how the board should be oriented:</p>
+            <p><code>if (engineSide == 8) { file = 16 - 1 - col; rank = 8 - 1 - row; }</code></p>
+            <p><code>else { file = col; rank = row; }</code></p>
+            <p>The variables <code>file</code> and <code>rank</code> describe the square's horizontal and vertical coordinates. If the engine plays Black, we reverse both coordinates so that the board is displayed from Black's perspective. Otherwise, we use the normal order.</p>
+            <p>Notice that the condition uses <code>engineSide</code>, not the side whose turn it currently is. The board orientation is determined by the player's chosen color, so it should not flip back and forth as the turns change.</p>
+            <p>We then convert the coordinates into our internal square index:</p>
+            <p><code>let i = rank * 16 + file;</code></p>
+            <p>Multiplying the rank by sixteen moves us to the beginning of that rank in the 0x88 array. Adding the file selects the square within it. This is the same addressing scheme used by the engine itself.</p>
+            <p>Now comes the key part of the loop:</p>
+            <p><code>if (i &amp; 0x88) continue;</code></p>
+            <p>This is the familiar 0x88 boundary test. If the square index has either of the relevant high bits set, it belongs to the padding area rather than the playable board. The <code>continue</code> statement skips the rest of the current iteration, so no HTML square is created for that position.</p>
+            <p>As a result, the loop considers sixteen positions per row but creates only eight visible squares. After eight rows, we have generated the sixty-four actual chessboard squares.</p>
+            <h3>Giving Each Square an Identity</h3>
+            <p>For every valid square, we append a <code>&lt;th&gt;</code> element to the HTML string:</p>
+            <p><code>ui += `&lt;th id="${i}" ... &gt;`;</code></p>
+            <p>The square's internal index becomes its HTML <code>id</code>. For example, the element representing square zero has <code>id="0"</code>. This is a useful shortcut: whenever the user clicks a square, we can recover the engine's square index directly from the element rather than maintaining a separate mapping between the interface and the board array.</p>
+            <p>We also assign a background color:</p>
+            <p><code>background-color: #${(((i%16+i/16|0)%2)?"777777":"dddddd")};</code></p>
+            <p>This expression calculates which of the two alternating colors to use. The expression <code>i % 16</code> extracts the file, while <code>i / 16 | 0</code> truncates the division result to an integer, effectively giving us the rank for a valid square index. Adding the two coordinates and taking the remainder after division by two tells us whether the square belongs to one color or the other.</p>
+            <p>The bitwise OR with zero is a compact JavaScript trick for converting a number to a signed 32-bit integer, which truncates the fractional part in this case. Since our valid square indices are nonnegative, it has the effect we want here.</p>
+            <p>The two color values are hexadecimal RGB colors: <code>777777</code> is a medium gray, and <code>dddddd</code> is a light gray. Together, they create the familiar checkerboard pattern.</p>
+            <p>We set the dimensions of each square using the value we calculated earlier:</p>
+            <p><code>width: ${size}px;</code></p>
+            <p><code>height: ${size}px;</code></p>
+            <p>The template literal allows us to insert JavaScript values directly into the HTML string. This is why we use backticks rather than ordinary quotation marks.</p>
+            <h3>Connecting Clicks to the Engine</h3>
+            <p>Each square also receives an inline click handler:</p>
+            <p><code>onclick="let i = 2; while(i--) ui(parseInt(this.id));"</code></p>
+            <p>When a square is clicked, <code>this</code> refers to the HTML element that received the click. Its <code>id</code> contains the square index, and <code>parseInt(this.id)</code> converts that string into a number.</p>
+            <p>The handler calls <code>ui()</code> twice with the same square index. The loop <code>let i = 2; while(i--)</code> simply repeats the call twice. This compact interaction works together with the selection logic later in the function, allowing the first call to update the selection state and the next call to refresh the interface based on that state.</p>
+            <h3>Writing the Board into the Page</h3>
+            <p>After the loops finish, the variable <code>ui</code> contains the generated square elements. We use <code>document.write()</code> to insert the board and its supporting styles into the page:</p>
+            <p><code>document.write(`...&lt;table id="board"...&gt;${ui}&lt;/table&gt;`);</code></p>
+            <p>The generated markup includes a viewport setting that disables user scaling:</p>
+            <p><code>&lt;meta name="viewport" content="user-scalable=no"&gt;</code></p>
+            <p>This is intended to keep the board from being zoomed through the usual touch gestures on mobile browsers. The exact effect depends on browser behavior and accessibility settings, so it should be considered a convenience rather than a guarantee.</p>
+            <p>We then define a CSS class:</p>
+            <p><code>.highlight { box-shadow: inset 0px 0px 3px 3px #ffbb00; }</code></p>
+            <p>The <code>highlight</code> class draws a yellow border-like shadow inside a square. We use it to indicate a selected square and its legal destinations.</p>
+            <p>The table itself receives several inline styles. Its font size is set relative to the square size, the cursor is kept as the default pointer, and <code>border-spacing: 0px</code> removes the gaps between table cells. The declarations <code>display: grid</code> and <code>place-items: center</code> attempt to center the table's contents using CSS Grid. The remaining declarations prevent text selection and suppress the usual mouse-selection behavior, which is useful because we do not want dragging across squares to select the Unicode chess symbols as ordinary text.</p>
+            <p>Once the HTML has been written, we initialize the board array:</p>
+            <p><code>board.fill(15);</code></p>
+            <p>Every entry is initially assigned the value <code>15</code>. Right side of the board is used to track castling rights after rooks or kings moved.</p>
+            <h3>Setting Up the Starting Position</h3>
+            <p>We now initialize the pieces and empty squares:</p>
+            <p><code>let i = 8; while (i--) { ... }</code></p>
+            <p>This loop runs eight times, with <code>i</code> taking the values from seven down to zero. It initializes one file at a time across the two back ranks and the six ranks between them.</p>
+            <p>The first statement is the densest part:</p>
+            <p><code>board[i] = (board[i+112] = [13, 11, 12, 14, 9, 12, 11, 13][i])+8;</code></p>
+            <p>The array literal <code>[13, 11, 12, 14, 9, 12, 11, 13]</code> contains the encoded pieces for the back rank. Reading from file zero to file seven, it represents rook, knight, bishop, queen, king, bishop, knight, and rook in this engine's piece encoding.</p>
+            <p>The index <code>i + 112</code> points to the corresponding square on the eighth rank. Each rank occupies sixteen array positions, so the last rank begins at index 112. Assigning the array value to <code>board[i+112]</code> places the encoded piece on that rank.</p>
+            <p>The outer assignment then stores that same value plus eight in <code>board[i]</code>. Adding eight sets the White color bit, producing the corresponding White piece on the first rank. In this way, the statement initializes both back ranks using the same piece-type values for each color.</p>
+            <p>The next statements initialize the pawns and the empty ranks:</p>
+            <p><code>board[i+16] = 18;</code></p>
+            <p><code>board[i+32] = 0;</code></p>
+            <p><code>board[i+48] = 0;</code></p>
+            <p><code>board[i+64] = 0;</code></p>
+            <p><code>board[i+80] = 0;</code></p>
+            <p><code>board[i+96] = 10;</code></p>
+            <p>Each index advances by sixteen, so it moves to the same file on the next rank. The value <code>18</code> represents a Black pawn: the pawn type is combined with the Black color bit. The value <code>10</code> represents a White pawn. The four ranks between the pawn ranks are initialized to zero, our representation of an empty square.</p>
+            <p>After the loop, we adjust a few entries explicitly:</p>
+            <p><code>board[8] = 7; board[12] = 3; board[15] = 11;</code></p>
+            <p><code>board[120] = 13; board[124] = 12; board[127] = 14;</code></p>
+            <p>The board is stored in 0x88 format, with each rank occupying 16 array entries: the first eight represent playable squares, and the next eight form the right-hand padding. This padding normally contains <code>15</code>, a mask that preserves all castling rights. The six exceptions—<code>7</code>, <code>3</code>, <code>11</code>, <code>13</code>, <code>12</code>, and <code>14</code>—are aligned with the kings' and rooks' starting squares. When a move is made, <code>castle &amp;= board[src + 8]; castle &amp;= board[dst + 8];</code> reads the mask eight entries to the right of both the source and destination squares. Each mask clears the appropriate castling-right bit: moving a king clears both rights for its color, moving a rook from its original corner clears that side's right, and capturing a rook on its original corner clears that right as well. All other squares preserve the rights because their masks are <code>15</code>. This clever use of the unused padding lets the engine update castling rights with two bitwise AND operations, without separate conditions for kings, rooks, or captures.</p>
+            <h3>Initializing the Piece-Square Table</h3>
+            <p>Before leaving the initialization block, we populate the piece-square table:</p>
+            <p><code>for (let j = 0; j &lt; 8; j++) for (let i = 0; i &lt; 8; i++)</code></p>
+            <p><code>pst[16 * j + i] = 28.25 - (i - 4) ** 2 - (j - 3.5) ** 2;</code></p>
+            <p>The two loops visit all sixty-four playable squares. The expression <code>16 * j + i</code> converts each rank and file into the corresponding 0x88 square index, just as we did while generating the HTML.</p>
+            <p>The assigned value is largest near the center and decreases as we move away from it. The terms <code>(i - 4) ** 2</code> and <code>(j - 3.5) ** 2</code> measure squared distances from the chosen horizontal and vertical reference points. Subtracting them from <code>28.25</code> produces a simple positional score that favors central squares.</p>
+            <p>This is a compact way to encourage pieces moving towards the center in quiet positions.</p>
+            <h3>Refreshing the Existing Board</h3>
+            <p>After the initialization block, we reach the part of <code>ui()</code> that runs on every call:</p>
+            <p><code>let lock = 0; for (let sq in board) { ... }</code></p>
+            <p>The variable <code>lock</code> records whether a square was highlighted before we refresh the display. The loop visits the enumerable indices of the board array. Because the array uses the 0x88 representation, we skip the invalid positions again:</p>
+            <p><code>if (sq &amp; 0x88) continue;</code></p>
+            <p>We check whether the current square has the <code>highlight</code> class:</p>
+            <p><code>if (document.getElementById(sq).classList[0] == "highlight") lock = 1;</code></p>
+            <p>If the first class on that square is <code>highlight</code>, we set <code>lock</code> to one. This preserves the information that a selection was active before the interface is redrawn. The code checks <code>classList[0]</code> specifically, so it relies on the highlight class being the first class in the list.</p>
+            <p>We then retrieve the square element and remove its highlight:</p>
+            <p><code>s=document.getElementById(sq);</code></p>
+            <p><code>s.classList.remove('highlight');</code></p>
+            <p>Since we are about to recalculate which squares should be highlighted, we first clear the old highlights. Otherwise, a square that was legal in the previous position might remain highlighted after the board changes.</p>
+            <p>Next, we update the displayed piece:</p>
+            <p><code>s.innerHTML = " \u265a\u265f\u265e\u265d\u265c\u265b--\u2654\u2659\u2658\u2657\u2656\u2655"[board[sq]&amp;15];</code></p>
+            <p>The string contains Unicode chess symbols in an order that matches the piece codes used by our engine. The expression <code>board[sq] &amp; 15</code> extracts the lower four bits of the encoded piece, allowing us to select the corresponding character regardless of the color bit. The string includes both Black and White pieces, along with placeholders for empty or special values.</p>
+            <p>This is another example of using the encoding to keep the interface code short. We do not need a long chain of conditions checking whether a square contains a king, queen, rook, or pawn. We use the piece code as an index into a string and let JavaScript return the appropriate symbol.</p>
+            <h3>Finding and Highlighting Legal Moves</h3>
+            <p>Once the board's appearance has been refreshed, we examine the moves available in the current position:</p>
+            <p><code>for (let move of movegen(-1, -1, -1)) {</code></p>
+            <p>Here, we call <code>movegen()</code> with three negative arguments to request the list of moves rather than execute a particular move. We then examine each generated move individually.</p>
+            <p>Before testing a move, we save the current position and its associated state:</p>
+            <p><code>let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;</code></p>
+            <p>The board is copied by converting it to a JSON string. The side to move, en-passant square, and castling rights are saved separately. These variables matter because making a move can change more than the piece locations: it can switch the side to move, create or remove an en-passant target, and alter castling rights.</p>
+            <p>We then try the move:</p>
+            <p><code>movegen(move[0], move[1], move[2]); let isLegal = 1;</code></p>
+            <p>The three elements of <code>move</code> represent the move's source square, destination square, and promotion choice. Calling <code>movegen()</code> with these arguments executes the move according to the engine's move-making logic.</p>
+            <p>Next, we test whether the resulting position has any legal moves:</p>
+            <p><code>if (!movegen(-1, -1, -1).length) isLegal = 0;</code></p>
+            <p>The intent is to reject a move if the resulting position has no legal replies.</p>
+            <p>After the test, we restore the board and the saved state:</p>
+            <p><code>board = JSON.parse(oldBoard);</code></p>
+            <p><code>side = oldSide, ep = oldEp, castle = oldCastle;</code></p>
+            <p>Parsing the saved JSON string recreates the board array, restoring the previous piece arrangement. The other three variables are restored to their original values. This lets us test each candidate without permanently changing the position that the user is viewing.</p>
+            <p>If the move failed the test, we skip it:</p>
+            <p><code>if (!isLegal) continue;</code></p>
+            <p>Otherwise, we check whether the selected destination matches the move's source square:</p>
+            <p><code>if (dst == move[0]) {</code></p>
+            <p>When it does, we highlight both the source and destination squares of the move:</p>
+            <p><code>let s = -1; while (++s &lt; 2) document.getElementById(move[s]).classList.add('highlight');</code></p>
+            <p>The loop increments <code>s</code> from zero to one, so <code>move[0]</code> and <code>move[1]</code> are highlighted. In this context, the selected square is highlighted along with each legal destination, making it easy to see which piece is selected and where it can move.</p>
+            <p>Finally, we set <code>src = dst</code>. This records the selected square in the engine's shared state, allowing the next interaction to know which piece the user intends to move.</p>
+            <h3>Executing the Selected Move</h3>
+            <p>After examining the available moves, we check whether a square was highlighted before the redraw:</p>
+            <p><code>if (lock) {</code></p>
+            <p>If <code>lock</code> is nonzero, the function treats the interaction as a move-selection attempt. It saves the current position again, using the same technique as before:</p>
+            <p><code>let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;</code></p>
+            <p>Then it attempts to execute the move from <code>src</code> to <code>dst</code>:</p>
+            <p><code>movegen(src, dst, prom);</code></p>
+            <p>The variable <code>prom</code> specifies the promotion piece. In our engine, it defaults to the queen, so a pawn reaching the last rank will be promoted to a queen unless this value is changed.</p>
+            <p>Once again, we inspect the resulting position:</p>
+            <p><code>if (!movegen(-1, -1, -1).length)</code></p>
+            <p>If no legal moves are found, the function restores the saved board and state. Otherwise, it leaves the move applied and proceeds to the computer's turn if necessary.</p>
+            <h3>Starting the Computer's Search</h3>
+            <p>If the move has been accepted, we check whether it is now the engine's turn:</p>
+            <p><code>if (side == engineSide) {</code></p>
+            <p>The variable <code>side</code> identifies the side to move, while <code>engineSide</code> identifies the computer's color. When the two values match, we schedule the engine's search:</p>
+            <p><code>setTimeout(function() { ... }, 1);</code></p>
+            <p>The short delay allows the browser to return control to its event loop before the search begins. This can give the interface an opportunity to process pending work, although it does not make the search itself run in the background. Because the search is synchronous JavaScript, it can still block the interface while it is calculating.</p>
+            <p>At the beginning of the callback, we initialize the variables used by iterative deepening:</p>
+            <p><code>let lastPV = []; stop = 0; let d = 0;</code></p>
+            <p><code>lastPV</code> stores the best principal variation found so far. The variable <code>stop</code> is reset so that the next search can run, and <code>d</code> records the current search depth.</p>
+            <p>We then search progressively deeper positions:</p>
+            <p><code>while (++d &lt;= 15) {</code></p>
+            <p>This loop begins at depth one and continues up to depth fifteen, unless one of the exit conditions is reached. Searching one depth at a time is called iterative deepening. It allows the engine to keep the result of the last completed search while attempting a more expensive one.</p>
+            <p>Each iteration calls the search function:</p>
+            <p><code>search(d, 0, -50000, 50000, 0, 0);</code></p>
+            <p>The first argument is the target depth. The remaining arguments supply the search's initial ply and alpha-beta bounds, along with the other search parameters used by this engine. The wide negative and positive bounds allow the search to begin with a broad score window.</p>
+            <p>After the search returns, we check whether it should stop:</p>
+            <p><code>if (stop) break;</code></p>
+            <p>If the engine has reached its stopping condition, we leave the loop. We also stop if the principal variation table has no move recorded at its root:</p>
+            <p><code>if (!pvLength[0]) break;</code></p>
+            <p>The root entry, indexed by zero, describes the best line found from the current position. If its length is zero, there is no principal variation to save.</p>
+            <p>Otherwise, we copy the current principal variation:</p>
+            <p><code>lastPV = JSON.parse(JSON.stringify(pvTable[0]));</code></p>
+            <p>This creates a deep copy of the root line. The copy is important because later search iterations may overwrite the contents of <code>pvTable[0]</code>. By preserving the most recently completed result, we can still make a move if a deeper iteration is interrupted.</p>
+            <p>Once iterative deepening ends, we clear the selection state:</p>
+            <p><code>src = -1; dst = -1;</code></p>
+            <p>If no move was found, the callback returns without attempting to execute one:</p>
+            <p><code>if (!lastPV.length) return;</code></p>
+            <p>Otherwise, we play the first move in the saved principal variation:</p>
+            <p><code>movegen(lastPV[0][0], lastPV[0][1], lastPV[0][2]);</code></p>
+            <p>The first entry contains the source square, destination square, and promotion choice of the engine's selected move. Calling <code>movegen()</code> with these values applies it to the board.</p>
+            <p>We then refresh the interface:</p>
+            <p><code>ui();</code></p>
+            <p>Finally, we highlight the destination square of the engine's move:</p>
+            <p><code>document.getElementById(lastPV[0][1]).classList.add('highlight');</code></p>
+            <p>This provides a simple visual indication of the computer's last move. The board now displays the updated position, and the user can begin selecting a piece for the next turn.</p>
+            <h3>A Small Interface With Several Responsibilities</h3>
+            <p>Our <code>ui()</code> function brings together several tasks that are often separated in larger chess programs: generating the board markup, initializing the starting position, drawing pieces, showing legal destinations, applying user moves, and invoking the search. Keeping these responsibilities in one function helps us stay within our compact-code goal, although it also means that careful testing is essential because interface logic and chess logic are closely connected.</p>
+            <p>Most importantly, this interface gives us a practical way to develop the engine incrementally. We can inspect the board after each move, click pieces to see the generated destinations, and catch errors before adding more complicated search behavior. By making the engine visible early, we turn the board into a debugging tool as well as a way to play chess.</p>
+            <h2>The Move Generator</h2>
+            <p>The move generator is responsible for producing a list of pseudolegal moves: moves that follow the pieces' movement rules but have not necessarily been checked to ensure that the moving side's king remains safe. It also supports executing a selected move, handling special moves, and detecting attacks on the king. Rather than implementing separate functions for each task, we reuse the same compact routine throughout our engine.</p>
+            <p>Let's walk through the function line by line.</p>
+            <pre><code>// Rules
+function movegen(uSrc, uDst, uProm) {
+    var moves = [];
+    let src = -1; while (++src &lt; 120) {
+        let pce = board[src];
+        if (!(pce &amp; side) || (src &amp; 0x88)) continue;
+        let pceType = pce &amp; 7;
+        for (let dir of offsets[pceType]) {
+            if (pce == 10) dir *= -1;
+            let dst = src + dir;
+            while (!(dst &amp; 0x88)) {
+                let capSq = dst;
+                if (pceType == 2 &amp;&amp; dst == ep) capSq ^= 16;
+                let capPce = board[capSq];
+                if (capPce &amp; side) break;
+                if (ep &gt; 0 &amp;&amp; board[ep] &amp;&amp; ((dst-ep)&lt;2) &amp;&amp; ((ep-dst)&lt;2)) return[];
+                if (pceType == 2) {
+                    if (!((dst-src) &amp; 7) &amp;&amp; capPce) break;
+                    if (((dst-src) &amp; 7) &amp;&amp; !capPce &amp;&amp; capSq != ep) break;
+                }
+                if ((capPce &amp; 7) == 1) return [];
+                board[capSq] = 0; board[src] = 0; board[dst] = pce;
+                if (pceType == 1 &amp;&amp; ((src == 116) || (src == 4))) {
+                    switch(dst) {
+                        case 118: board[117] = 13; board[119] = 0; break;
+                        case 114: board[115] = 13; board[112] = 0; break;
+                        case 6: board[5] = 21; board[7] = 0; break;
+                        case 2: board[3] = 21; board[0] = 0; break;
+                    }
+                }
+                let oldCastle = castle;
+                castle &amp;= board[src + 8]; castle &amp;= board[dst + 8];
+                if (pceType == 2) {
+                    if ((dst &gt;&gt; 4) == (side == 8 ? 0 : 7)) {
+                        board[dst] = ((uProm &gt; 0) ? uProm : 6) | side;
+                        for (let p = 6; p &gt; 2; p--)
+                            moves.push([src, dst, p, capPce]);
+                    } else moves.push([src, dst, 0, capPce]);
+                } else moves.push([src, dst, 0, capPce]);
+                if (src == uSrc &amp;&amp; dst == uDst) {
+                    ep = -1; if (pceType == 2) {
+                        if (((src &gt;&gt; 4) == ((side == 8) ? 6 : 1)) &amp;&amp;
+                           ((dst &gt;&gt; 4) == ((side == 8) ? 4 : 3))) ep = dst ^ 16;
+                    } else if (pceType == 1) {
+                        if (src == 116) {
+                            if (dst == 118) ep = 117;
+                            if (dst == 114) ep = 115;
+                        } else if (src == 4) {
+                            if (dst == 6) ep = 5;
+                            if (dst == 2) ep = 3;
+                        }
+                    }
+                    side = 24 - side; return 'move';
+                }
+                board[dst] = 0; board[src] = pce; board[capSq] = capPce;
+                if (pceType == 1 &amp;&amp; ((src == 116) || (src == 4))) {
+                    switch(dst) {
+                        case 118: board[119] = 13; board[117] = 0; break;
+                        case 114: board[112] = 13; board[115] = 0; break;
+                        case 6: board[7] = 21; board[5] = 0; break;
+                        case 2: board[0] = 21; board[3] = 0; break;
+                    }
+                }
+                castle = oldCastle;
+                if (pceType == 2) {
+                    if ((src &gt;&gt; 4) != ((side == 8) ? 6 : 1)) break;
+                    if ((dst &gt;&gt; 4) != ((side == 8) ? 5 : 2)) break;
+                } else if (pceType == 1) {
+                    if ((dir != 1) &amp;&amp; (dir != -1)) break;
+                    if (dir == 1) {
+                        if (board[src + 2]) break;
+                        if (side == 8 &amp;&amp; !(castle &amp; 1)) break;
+                        if (side == 16 &amp;&amp; !(castle &amp; 4)) break;
+                    }
+                    if (dir == -1) {
+                        if (board[src - 2]) break;
+                        if (board[src - 3]) break;
+                        if (side == 8 &amp;&amp; !(castle &amp; 2)) break;
+                        if (side == 16 &amp;&amp; !(castle &amp; 8)) break;
+                    }
+                    if (src != ((side == 8) ? 116 : 4)) break;
+                    if (Math.abs(src-dst) &gt; 1) break;
+                }
+                if (capPce &amp; (24 - side)) break;
+                if (!(pceType &amp; 4) &amp;&amp; pceType != 2 &amp;&amp; pceType != 1) break;
+                dst += dir;
+            }
+        }
+    }
+    return moves;
+}</code></pre>
+            <h3>1. Setting up the move list and scanning the board</h3>        
+            <p><code>var moves = [];</code> creates the array that will hold generated moves. Each entry has four elements: source square, destination square, promotion choice, and captured piece. <code>let src = -1; while (++src &lt; 120)</code> scans board indices from zero through 119. Because the board uses 0x88 representation, the condition <code>src &amp; 0x88</code> identifies the eight padding entries in each rank, which are skipped by <code>continue</code>. The other part of the condition, <code>!(pce &amp; side)</code>, skips empty squares and pieces belonging to the opponent. <code>pceType = pce &amp; 7</code> extracts the piece type from the encoded piece value, and <code>for (let dir of offsets[pceType])</code> iterates over the movement directions defined for that type.</p>
+            <h3>2. Exploring each piece's destinations</h3>
+            <p><code>if (pce == 10) dir *= -1;</code> reverses the movement direction for white pawns. The generator then calculates <code>dst = src + dir</code> and continues while <code>dst</code> remains on the board. <code>capSq</code> normally equals the destination square, but for an en passant capture, <code>capSq ^= 16</code> shifts it one rank to locate the pawn that is actually captured. The next line reads that piece into <code>capPce</code>. If the destination contains a piece of the moving side, <code>if (capPce &amp; side) break;</code> ends exploration in that direction: a piece cannot capture its own side, and a sliding piece cannot move through it.</p>
+            <p>The check beginning with <code>if (ep &gt; 0 ...)</code> is a special-purpose test that uses the global en passant square during castling checks. If the square being checked is occupied under the condition shown, the function returns an empty list. This compact technique is used by the engine's castling logic to reject castling when the king is in check.</p>
+            <p>The next two conditions handle pawn movement. If a pawn moves straight ahead, <code>((dst-src) &amp; 7)</code> is zero, so an occupied destination blocks the move. If the pawn moves diagonally, the destination must contain a capturable piece or be the en passant target. The line <code>if ((capPce &amp; 7) == 1) return [];</code> detects a king on the capture square and returns an empty list. This is a central trick in our engine: rather than writing a separate <code>isSqAttacked()</code> function, we can generate the opponent's pseudolegal moves and detect whether one of them would capture the king. That makes king-capture move generation useful for checking whether a position is legal.</p>
+            <h3>3. Making a temporary move</h3>
+            <p><code>board[capSq] = 0; board[src] = 0; board[dst] = pce;</code> temporarily removes the captured piece, clears the source square, and places the moving piece on the destination. This lets the generator inspect the position after the candidate move, including special moves. If the moving piece is a king on its original square, the following <code>switch</code> checks whether the destination represents castling. For each castling destination, it temporarily moves the appropriate rook to the square next to the king and clears the rook's original square. The four cases cover both directions for both colors.</p>
+            <p><code>let oldCastle = castle;</code> saves the current castling rights before they are changed. The two bitwise AND operations, <code>castle &amp;= board[src + 8]</code> and <code>castle &amp;= board[dst + 8]</code>, read the masks stored in the board's right-hand padding. Most padding entries contain <code>15</code>, preserving every right; the six special masks correspond to the kings' and rooks' original squares. This automatically clears castling rights when a king or rook moves, or when a rook is captured on its starting square. The old value is restored after a temporary move is undone, so simply generating moves does not permanently change castling rights.</p>
+            <h3>4. Promotions and recording moves</h3>
+            <p>The first <code>if (pceType == 2)</code> checks whether the moving piece is a pawn. If it reaches the final rank, <code>board[dst] = ((uProm &gt; 0) ? uProm : 6) | side;</code> temporarily replaces it with the requested promotion piece, or a queen when no promotion choice was supplied. The loop <code>for (let p = 6; p &gt; 2; p--)</code> adds the four promotion choices—queen, rook, bishop, and knight—to the move list. Each entry includes <code>capPce</code>, the captured piece, so later search code can recognize captures without reconstructing that information. This is particularly useful in quiescence search, where the engine extends its search through tactical moves such as captures. If the pawn is not promoting, the function records an ordinary move with promotion value zero. Non-pawn moves are recorded in the same four-element format.</p>
+            <h3>5. Executing a requested move</h3>
+            <p><code>if (src == uSrc &amp;&amp; dst == uDst)</code> checks whether the candidate matches the move requested by the caller. If it does, the function updates the en passant target. It first clears <code>ep</code>, then checks whether a pawn has advanced two squares; if so, <code>ep = dst ^ 16</code> identifies the square behind that pawn. For a king move, the subsequent conditions assign the appropriate intermediate square to <code>ep</code> when the move is castling. In this compact engine, that global variable is also reused by the castling-checking logic described earlier.</p>
+            <p><code>side = 24 - side;</code> switches the side to move: with the two side values <code>8</code> and <code>16</code>, subtracting either from <code>24</code> produces the other. The function then returns <code>'move'</code>, leaving the requested move applied to the board. This is how the interface and search can use the same generator to make a move rather than just list possible moves.</p>
+            <h3>6. Undoing the candidate and checking special rules</h3>
+            <p>If the candidate was not the requested move, the next line restores the board: <code>board[dst] = 0; board[src] = pce; board[capSq] = capPce;</code> removes the temporary destination piece, returns the mover to its source, and restores the captured piece. The second castling <code>switch</code> reverses the rook movement performed earlier. Then <code>castle = oldCastle;</code> restores the castling rights saved before testing the move. Together, these operations let the function explore many possibilities without leaving the board in a changed state.</p>
+            <p>The following pawn conditions restrict the pawn's extra forward step to its starting rank and prevent it from advancing a second square after the first step. For kings, the code checks the direction and whether castling is possible. A king moving in the positive direction must have the relevant castling right and an empty square two positions away; moving in the negative direction also requires the extra square to be empty, because queenside castling needs more room. The color-specific bit tests use the engine's castling-right encoding. The source-square test ensures that castling can only begin from the king's original square, while <code>Math.abs(src-dst) &gt; 1</code> stops the king from continuing along the same direction after its ordinary one-square move.</p>
+            <p><code>if (capPce &amp; (24 - side)) break;</code> stops further exploration when the candidate captures an opposing piece. The next condition, <code>if (!(pceType &amp; 4) &amp;&amp; pceType != 2 &amp;&amp; pceType != 1) break;</code>, stops pieces that do not slide, except pawns and kings, whose movement rules have already been handled separately. Sliding pieces continue with <code>dst += dir</code>, advancing to the next square in the current direction. Once all directions and all pieces have been processed, <code>return moves;</code> returns the generated pseudolegal move list.</p>
+            <div class="note">
+                <div class="note-title">Why reuse one function?</div>
+                <p>The move generator produces pseudolegal moves, can execute a requested move, tracks king captures for attack and legality checks, handles special moves, and records captured pieces for quiescence search. It also relies on the global <code>ep</code> and <code>castle</code> variables, temporarily updating and restoring them instead of threading extra state through every call. This keeps the interface simple and avoids duplicating much of the chess rules across separate functions.</p>
+            </div>
+            <h2>The Search Algorithm</h2>
+            <p>The search function is where our engine turns the move generator into a chess-playing program. It explores possible moves, evaluates the resulting positions, and tries to find the move that gives the best result against an opponent who also plays optimally. To keep this process efficient, we combine several techniques: negamax search with alpha-beta pruning, iterative deepening from the user interface, quiescence search, principal variation tracking, and a node limit that lets the engine stop when its search budget is exhausted.</p>
+<pre><code>// Engine
+function search(depth, ply, alpha, beta, caps, iid) {
+    if (stop) return 0;
+    if (!ply && !iid) {
+        var start = Date.now(); nodes = 0;
+        pvTable = Array.from({ length: 64 }, () => Array(64).fill(0));
+        pvLength = new Array(64).fill(0);
+    } pvLength[ply] = ply; if (depth <= 0) {
+        if (nodes > 250000) stop = 1;
+        let score = 0; let sq = -1; while (++sq < 120) {
+            if (sq & 0x88) continue;
+            let pce = board[sq];
+            if (pce) {
+                let value = material[pce & 7] + pst[sq];
+                (pce & 8) ? (score += value) : (score -= value);
+                if (pce == 9 && (sq == 114 || sq == 118)) score += 20;
+                if (pce == 17 && (sq == 2 || sq == 6)) score -= 20;
+            }
+        } score = (side == 8) ? score : -score;
+        if (score >= beta) return beta;
+        if (score > alpha) alpha = score;
+        caps = 1;
+    } nodes++; let moves = movegen(-1, -1, -1);
+    if (depth >= 5 && !caps) {
+        search(depth-2, ply, alpha, beta, caps, 1);
+        if (stop) return 0;
+    } for (let current = 0; current < moves.length; current++) {
+        if (moves[current][0] == pvTable[ply][ply][0] &&
+            moves[current][1] == pvTable[ply][ply][1] &&
+            moves[current][2] == pvTable[ply][ply][2]) {
+            let temp = moves[0];
+            moves[0] = moves[current];
+            moves[current] = temp;
+            break;
+        }
+    } for (let move of moves) {
+        if (caps && !move[3]) continue;
+        let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
+        for (let sq = 0; sq < 128; sq++) oldBoard[sq] = board[sq];
+        movegen(move[0], move[1], move[2]);
+        if (!movegen(-1, -1, -1).length) {
+            for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
+            side = oldSide, ep = oldEp, castle = oldCastle;
+            continue;
+        } let nextDepth = caps ? 0 : depth - 1;
+        let score = -search(nextDepth, ply + 1, -beta, -alpha, caps, 0);        
+        for (let sq = 0; sq < 128; sq++) board[sq] = oldBoard[sq];
+        side = oldSide, ep = oldEp, castle = oldCastle;
+        if (stop) return 0;
+        if (score > alpha) {
+            alpha = score;
+		    pvTable[ply][ply] = move;
+		    for (let i = ply + 1; i < pvLength[ply + 1]; i++) pvTable[ply][i] = pvTable[ply + 1][i];
+		    pvLength[ply] = pvLength[ply + 1];
+            if (score >= beta) return beta;
+        }
+    } if (!ply && !iid) {
+        let pv = "";
+        for (let i = 0; i < pvLength[0]; i++) {
+            let move = pvTable[0][i];
+            pv += String.fromCharCode(97 + (move[0] & 7)) + (8 - (move[0] >> 4)) +
+                  String.fromCharCode(97 + (move[1] & 7)) + (8 - (move[1] >> 4)) +
+                  (move[2] ? String.fromCharCode(97 + move[2]) : "");
+            if (i < pvLength[0]-1) pv += " ";
+        } console.log(`score ${alpha} depth ${depth} nodes ${nodes} time ${Date.now() - start} pv ${pv}`);
+    } return alpha;
+}</code></pre>
+            <p>The function accepts six arguments: <code>depth</code>, the remaining search depth; <code>ply</code>, the number of half-moves from the root; <code>alpha</code> and <code>beta</code>, the bounds used by alpha-beta pruning; <code>caps</code>, which indicates that we are searching captures in quiescence mode; and <code>iid</code>, a flag used for an auxiliary search that helps identify a promising move before the main search. These parameters allow the same function to handle ordinary search, quiescence search, and internal iterative deepening without separate implementations.</p>
+            <h3>1. Starting and stopping the search</h3>
+            <pre><code>if (stop) return 0;
+if (!ply &amp;&amp; !iid) {
+    var start = Date.now(); nodes = 0;
+    pvTable = Array.from({ length: 64 }, () =&gt; Array(64).fill(0));
+    pvLength = new Array(64).fill(0);
+}
+pvLength[ply] = ply;</code></pre>
+            <p>The first line checks the global <code>stop</code> flag. If the engine has been asked to stop, the function returns immediately instead of spending more time exploring moves. At the root of a normal search—where <code>ply</code> is zero and <code>iid</code> is false—we record the start time and reset the node counter. We also initialize <code>pvTable</code>, a two-dimensional array that stores the current principal variation, and <code>pvLength</code>, which records the length of the variation at each search ply. A principal variation (PV) is the sequence of moves the engine currently considers best. The line <code>pvLength[ply] = ply</code> initializes the variation length for the current search level.</p>
+            <p>The engine uses a maximum of 64 plies for its PV arrays, which is ample for the intended search depth. Resetting these structures at the beginning of each root search prevents information from a previous iteration from being mistaken for the current principal variation.</p>
+            <h3>2. Evaluating a position at the search horizon</h3>
+            <pre><code>if (depth &lt;= 0) {
+    if (nodes &gt; 250000) stop = 1;
+    let score = 0; let sq = -1; while (++sq &lt; 120) {
+        if (sq &amp; 0x88) continue;
+        let pce = board[sq];
+        if (pce) {
+            let value = material[pce &amp; 7] + pst[sq];
+            (pce &amp; 8) ? (score += value) : (score -= value);
+            if (pce == 9 &amp;&amp; (sq == 114 || sq == 118)) score += 20;
+            if (pce == 17 &amp;&amp; (sq == 2 || sq == 6)) score -= 20;
+        }
+    }
+    score = (side == 8) ? score : -score;
+    if (score &gt;= beta) return beta;
+    if (score &gt; alpha) alpha = score;
+    caps = 1;
+}</code></pre>
+            <p>When <code>depth &lt;= 0</code>, the search reaches its nominal horizon. Instead of stopping immediately, it evaluates the current position and switches to capture-only search. This is the beginning of quiescence search: by continuing to examine captures, the engine can avoid evaluating a position in the middle of an obvious exchange. The node counter is also checked against <code>250000</code>; once that threshold is exceeded at this point, the global <code>stop</code> flag is set so the search can unwind.</p>
+            <p>A node limit is often more practical than a fixed depth limit when we do not implement time management, because the number of positions grows unevenly: some positions have very few legal moves, while others have many. A fixed depth can therefore take unpredictable amounts of time to complete, especially as the search gets deeper. Limiting the number of visited nodes gives the engine a more consistent computational budget, regardless of how branching varies across positions. It also allows iterative deepening to complete as many search iterations as possible within that budget, although the exact runtime can still vary with the cost of processing each node.</p>
+            <p>The evaluation starts at zero and scans the board using the same 0x88 representation as the move generator. Padding squares are skipped, and each occupied square contributes its material value from <code>material</code> plus its positional value from <code>pst</code>. Pieces belonging to White add to the score; pieces belonging to Black subtract from it. The two extra conditions give a small bonus or penalty when the specified king occupies a castling destination square. This rewards those particular king positions in the evaluation, in addition to the separate castling rules.</p>
+            <p>Because the rest of the search uses negamax, the score is converted to the perspective of the side to move: if <code>side == 8</code>, the score is kept as it is; otherwise, its sign is reversed. If the evaluation is already at least <code>beta</code>, the function returns <code>beta</code>, since this branch cannot improve the result for the current caller. Otherwise, <code>alpha</code> is raised when the evaluation is better than the current lower bound. Finally, <code>caps = 1</code> switches the search into capture-only mode.</p>
+            <h3>3. Generating moves and improving move ordering</h3>
+            <pre><code>nodes++;
+let moves = movegen(-1, -1, -1);
+if (depth &gt;= 5 &amp;&amp; !caps) {
+    search(depth-2, ply, alpha, beta, caps, 1);
+    if (stop) return 0;
+}</code></pre>
+            <p>Every search node increments <code>nodes</code>, giving us a measure of how much work the engine has performed. The call to <code>movegen(-1, -1, -1)</code> generates the current side's pseudolegal moves without requesting that any particular move be executed. When the search reaches depth five or more, and is not already in capture-only mode, it performs an additional, shallower search at <code>depth - 2</code>. The final argument, <code>iid = 1</code>, marks this as an internal iterative deepening (IID) search. Its purpose is to help establish a promising principal-variation move that can be searched first in the main search. If the auxiliary search triggers the stop flag, we return immediately.</p>
+            <p>This is useful because alpha-beta pruning works best when strong moves are examined early. Finding a good candidate move before the full search can therefore reduce the amount of work required. In this implementation, the auxiliary search shares the current position and ply, and its results are used through the principal variation table.</p>
+            <pre><code>for (let current = 0; current &lt; moves.length; current++) {
+    if (moves[current][0] == pvTable[ply][ply][0] &amp;&amp;
+        moves[current][1] == pvTable[ply][ply][1] &amp;&amp;
+        moves[current][2] == pvTable[ply][ply][2]) {
+        let temp = moves[0];
+        moves[0] = moves[current];
+        moves[current] = temp;
+        break;
+    }
+}</code></pre>
+            <p>This loop looks for the move already stored at the beginning of the current ply's principal variation. It compares the source square, destination square, and promotion choice. If it finds a match, it swaps that move with the first entry in <code>moves</code>, then stops searching. As a result, the previously preferred move is examined first. The temporary variable <code>temp</code> preserves the original first move during the swap. This is a compact form of PV move ordering: rather than sorting every move by a score, we give the engine's known promising move priority.</p>
+            <h3>4. Searching candidate moves</h3>
+            <pre><code>for (let move of moves) {
+    if (caps &amp;&amp; !move[3]) continue;
+    let oldBoard = [];
+    let oldSide = side, oldEp = ep, oldCastle = castle;
+    for (let sq = 0; sq &lt; 128; sq++) oldBoard[sq] = board[sq];
+    movegen(move[0], move[1], move[2]);
+    if (!movegen(-1, -1, -1).length) {
+        for (let sq = 0; sq &lt; 128; sq++) board[sq] = oldBoard[sq];
+        side = oldSide, ep = oldEp, castle = oldCastle;
+        continue;
+    }</code></pre>
+            <p>The main loop visits each candidate move. When <code>caps</code> is true, <code>if (caps &amp;&amp; !move[3]) continue;</code> skips moves that do not capture anything. The fourth element of each move, <code>move[3]</code>, contains the captured piece, which is why the move generator records it when building the move list. This filtering turns the search into quiescence search, where the engine examines captures instead of continuing through every quiet move.</p>
+            <p>Before making a move, the function saves the current board and the global state variables <code>side</code>, <code>ep</code>, and <code>castle</code>. The loop copies all 128 array entries, including the unused 0x88 padding. It then calls <code>movegen(move[0], move[1], move[2])</code> to execute the candidate move. A second call to <code>movegen(-1, -1, -1)</code> generates the opponent's pseudolegal moves. If that list is empty, the candidate is rejected and the saved position and state are restored before the loop continues.</p>
+            <p>This legality check relies on the engine's king-capture approach: the move generator returns an empty list when it encounters a move that captures a king. Thus, an empty opponent move list is used here as a signal that the candidate should not be searched.</p>
+            <h3>5. Negamax and alpha-beta pruning</h3>
+            <pre><code>let nextDepth = caps ? 0 : depth - 1;
+let score = -search(nextDepth, ply + 1, -beta, -alpha, caps, 0);
+for (let sq = 0; sq &lt; 128; sq++) board[sq] = oldBoard[sq];
+side = oldSide, ep = oldEp, castle = oldCastle;
+if (stop) return 0;</code></pre>
+            <p>The next depth depends on whether we are in capture-only mode. During ordinary search, <code>depth - 1</code> advances the search one ply deeper. During quiescence search, <code>nextDepth</code> remains zero, so the recursive call continues evaluating positions while the capture filter remains active.</p>
+            <p>The recursive call uses the negamax formulation of minimax. Since the evaluation is always expressed from the current side's perspective, the opponent's score is the negative of our score. We therefore negate the returned value and reverse the alpha-beta bounds: <code>-beta</code> becomes the new lower bound, and <code>-alpha</code> becomes the new upper bound. This lets the same search code handle both players without separate maximizing and minimizing branches.</p>
+            <p>After recursion returns, the original board and global state are restored. This is essential because each candidate must be evaluated from the same starting position. If the global <code>stop</code> flag has been set, the function immediately returns zero to unwind the remaining recursive calls.</p>
+            <pre><code>if (score &gt; alpha) {
+    alpha = score;
+    pvTable[ply][ply] = move;
+    for (let i = ply + 1; i &lt; pvLength[ply + 1]; i++)
+        pvTable[ply][i] = pvTable[ply + 1][i];
+    pvLength[ply] = pvLength[ply + 1];
+    if (score &gt;= beta) return beta;
+}</code></pre>
+            <p>When a move produces a score better than the current <code>alpha</code>, the engine improves its lower bound and records the move as the best one found so far. It places the move at the beginning of the current row in <code>pvTable</code>, then copies the remainder of the child position's principal variation into the current row. The <code>pvLength</code> array is updated to reflect the length of that variation. This builds a sequence of moves representing the engine's current best line.</p>
+            <p>The final condition, <code>if (score &gt;= beta) return beta;</code>, performs an alpha-beta cutoff. Once the score reaches or exceeds the upper bound, examining more moves at this node cannot improve the result relevant to the parent. Returning <code>beta</code> immediately saves the engine from searching branches that can no longer affect the decision. The combination of alpha-beta pruning and searching promising moves early is one of the main reasons move ordering matters so much.</p>
+            <h3>6. Reporting the principal variation</h3>
+            <pre><code>if (!ply &amp;&amp; !iid) {
+    let pv = "";
+    for (let i = 0; i &lt; pvLength[0]; i++) {
+        let move = pvTable[0][i];
+        pv += String.fromCharCode(97 + (move[0] &amp; 7)) + (8 - (move[0] &gt;&gt; 4)) +
+              String.fromCharCode(97 + (move[1] &amp; 7)) + (8 - (move[1] &gt;&gt; 4)) +
+              (move[2] ? String.fromCharCode(97 + move[2]) : "");
+        if (i &lt; pvLength[0]-1) pv += " ";
+    }
+    console.log(`score ${alpha} depth ${depth} nodes ${nodes} time ${Date.now() - start} pv ${pv}`);
+}
+return alpha;</code></pre>
+            <p>Once the root search finishes, the function prints its results, provided this is not an internal iterative deepening call. The <code>!ply &amp;&amp; !iid</code> condition restricts reporting to the root of a normal search, so recursive calls do not flood the console with output.</p>
+            <p>The code builds a string containing the principal variation. For every move in <code>pvTable[0]</code>, it converts the source and destination squares into coordinate notation. The expression <code>move[0] &amp; 7</code> extracts the file, and <code>move[0] &gt;&gt; 4</code> extracts the rank index; the same operations are applied to the destination. Adding <code>97</code> converts a file index into the character codes for <code>a</code> through <code>h</code>, while <code>8 - (square &gt;&gt; 4)</code> converts the internal rank index into chess notation. If the move is a promotion, the final expression appends a letter based on the promotion value. Spaces separate moves in the resulting line.</p>
+            <p>The console output includes the current score, search depth, number of nodes visited, elapsed time in milliseconds, and principal variation. This information is valuable when debugging and tuning the engine: we can compare how many nodes different searches visit, how long they take, and which line the engine believes is best. Finally, <code>return alpha;</code> returns the best lower bound found by the search to its caller.</p>
+            <div class="note">
+            <div class="note-title">The search in a nutshell</div>
+            <p>Our search repeatedly generates moves, makes each candidate, evaluates the resulting position recursively, and restores the original state. Negamax simplifies the alternating turns, alpha-beta pruning avoids unnecessary branches, quiescence search examines captures beyond the nominal depth, and the principal variation records the strongest line found. The global stop flag and node limit provide a simple way to interrupt an expensive search, while the root diagnostics help us measure its performance.</p>
+            </div>
+            <h1>Bonus Chapter: Perft Testing</h1>
+            <p>This style of move generation has a well-known counterpart in H. G. Muller's Micro-Max, a remarkably compact chess engine that combines move generation and search within a single recursive function. While this approach saves code, it makes isolated move-generation testing more difficult because the two responsibilities are intertwined. Our engine takes a more conventional approach, keeping move generation separate from search, so we can test it independently with perft and compare its node counts against known reference results. This makes it much easier to detect and debug errors in legal move generation without having to untangle the search itself.</p>
+            <h2>What Is Perft?</h2>
+            <p>Perft, short for performance test, counts the number of leaf positions reached by recursively generating every legal move to a specified depth. At depth one, we count all legal moves from the current position. At depth two, we count every legal reply to those moves. At depth three, we continue one ply further, and so on. A ply is one move by one side, so a depth of four means four individual moves, not four complete turns.</p>
+            <p>Perft does not evaluate positions, choose good moves, or attempt to play chess. It simply explores the move tree and counts its leaves. Because standard chess positions have well-known perft results, we can compare our engine's counts against trusted reference values. A mismatch tells us that something is wrong in move generation or position handling, even if the engine's gameplay looks reasonable.</p>
+            <h2>Printing the Board</h2>
+            <p>We begin with a small debugging helper that prints the board and the current node count. It is useful when investigating a suspicious position, because seeing the board is often much easier than trying to reason about a sequence of square indices.</p>
+            <pre><code>function print() {
+    let b = "";
+    for (let r = 0; r &lt; 8; r++) {
+        for (let c = 0; c &lt; 8; c++) {
+            let sq = r*16+c;
+            if (sq &amp; 0x88) continue;
+            b += ".kpnbrq--KPNBRQ"[board[sq]&amp;15];
+        } b += "\n";
+    } console.log(b, nodes);
+}</code></pre>
+            <p>The function builds a string named <code>b</code> to represent the board. The outer loop visits eight ranks, and the inner loop visits eight files on each rank. The expression <code>r*16+c</code> converts the rank and file into our engine's 0x88 square index. The <code>if (sq &amp; 0x88)</code> check skips indices outside the playable board, although with these loop bounds every generated square is already valid; it is retained as a reminder of the 0x88 representation.</p>
+            <p>The string <code>".kpnbrq--KPNBRQ"</code> maps the low four bits of each board value to a printable character. Empty squares appear as dots, black pieces as lowercase letters, and white pieces as uppercase letters. The two hyphens occupy unused entries in the lookup string, while <code>board[sq] &amp; 15</code> selects the character associated with the stored piece code. After each rank, we append a newline, then print the completed board alongside <code>nodes</code>.</p>
+            <h2>The Recursive Perft Driver</h2>
+            <p>The core of the test is <code>perftDriver()</code>. It recursively explores the legal moves and increments the global node counter whenever it reaches the requested depth.</p>
+            <pre><code>nodes = 0; function perftDriver(depth, ply) {
+    if (!depth) { nodes++; return; }
+    for (let move of movegen(-1, -1, -1)) {
+        let oldBoard = []; let oldSide = side, oldEp = ep, oldCastle = castle;
+        for (let sq = 0; sq &lt; 128; sq++) oldBoard[sq] = board[sq];
+        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1));
+        if (!movegen(-1, -1, -1).length) {
+            for (let sq = 0; sq &lt; 128; sq++) board[sq] = oldBoard[sq];
+            side = oldSide, ep = oldEp, castle = oldCastle;
+            continue;
+        } perftDriver(depth - 1, ply+1);
+        for (let sq = 0; sq &lt; 128; sq++) board[sq] = oldBoard[sq];
+        side = oldSide, ep = oldEp, castle = oldCastle;
+    }
+}</code></pre>
+            <p>We initialize <code>nodes</code> to zero before defining the driver. The <code>depth</code> argument determines how many plies remain, while <code>ply</code> records how far we have descended from the starting position. <code>ply</code> is not actually used in this implementation but it shows how to keep this variable inside the recursive function. Previously, in search we used it to index our PV table.</p>
+            <p>The first condition, <code>if (!depth)</code>, is the base case. When the remaining depth reaches zero, we increment <code>nodes</code> and return. This means every leaf reached by the search contributes exactly one to the total.</p>
+            <p>Otherwise, we ask <code>movegen(-1, -1, -1)</code> for the current position's candidate moves. For each move, we save the complete board and the global state that can change: <code>side</code>, <code>ep</code>, and <code>castle</code>. The loop copies all 128 entries, including the padding used by our 0x88 representation.</p>
+            <p>Next, <code>movegen(move[0], move[1], (move.length == 3 ? move[2] : -1))</code> applies the candidate move. The conditional expression passes the promotion piece when the move has three entries; otherwise, it passes <code>-1</code> to indicate that no promotion argument is supplied. This matches the move format expected by this version of the engine.</p>
+            <p>We then generate the opponent's moves. If the resulting list is empty, this engine's king-capture shortcut treats the candidate as illegal: we restore the board and global state, then continue to the next candidate. For a legal move, we call <code>perftDriver(depth - 1, ply+1)</code>, reducing the remaining depth by one ply and increasing the ply counter.</p>
+            <p>Finally, we restore the saved board and global state after recursion returns. This restoration is essential: each sibling move must start from the same parent position. Without it, one branch could accidentally inherit pieces, en-passant state, or castling rights changed by another branch, making the node count meaningless.</p>
+            <div class="note">
+            <div class="note-title">A note about move generation</div>
+            <p>This driver depends on the engine's existing move-generation conventions. In particular, it uses an empty opponent move list as the signal for an illegal candidate, relying on the engine's king-capture shortcut. When adapting the test to another engine, use that engine's own legality-checking mechanism instead. A conventional engine may distinguish checkmate, stalemate, and illegal positions explicitly.</p>
+            </div>
+            <h2>Testing Every Root Move</h2>
+            <p>The recursive driver returns only a total node count. To make debugging more useful, our top-level <code>perftTest()</code> function also counts the nodes reached through each individual move from the starting position. This is called a divide-style perft test: instead of reporting only one large number, it shows how much each root move contributes.</p>
+            <pre><code>function perftTest(depth) {
+    nodes = 0;
+    console.log('   Performance test:\n');
+    resultString = '';
+    let startTime = Date.now();
+    let count = 0;
+    for (let move of movegen(-1, -1, -1)) {
+        let oldBoard = JSON.stringify(board), oldSide = side, oldEp = ep, oldCastle = castle;
+        movegen(move[0], move[1], (move.length == 3 ? move[2] : -1));
+        if (!movegen(-1, -1, -1).length) {
+            board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+            continue;
+        } let cumNodes = nodes;
+        perftDriver(depth - 1, 0);
+        board = JSON.parse(oldBoard), side = oldSide, ep = oldEp, castle = oldCastle;
+        let oldNodes = nodes - cumNodes; count++;
+        console.log(
+            '   move' +
+            ' ' + (count) + ((count &lt; 9) ? ':  ' : ': ') + String.fromCharCode(97 + (move[0] &amp; 7)) +
+            (8 - (move[0] &gt;&gt; 4)) + String.fromCharCode(97 + (move[1] &amp; 7)) + (8 - (move[1] &gt;&gt; 4)) +
+            '    nodes: ' + oldNodes
+        );
+    }
+
+    resultString += '\n   Depth: ' + depth;
+    resultString += '\n   Nodes: ' + nodes;
+    resultString += '\n    Time: ' + (Date.now() - startTime) + ' ms\n';
+    console.log(resultString);
+} //perftTest(4); ui();</code></pre>
+            <p>At the start of <code>perftTest()</code>, we reset the node counter, print a heading, clear <code>resultString</code>, record the start time, and initialize a counter for the root moves. The function then loops through the moves generated from the current position.</p>
+            <p>For each root move, the code saves the board by converting it to JSON and saves the three global state variables separately. It applies the move and uses the same opponent-move check as the recursive driver to reject illegal candidates. If the candidate is rejected, the saved state is restored and the loop continues.</p>
+            <p>For a legal move, <code>cumNodes</code> stores the node count before searching its subtree. We then call <code>perftDriver(depth - 1, 0)</code>, because the root move has already consumed one ply. When the recursive call finishes, the board and state are restored. Subtracting <code>cumNodes</code> from the new total gives <code>oldNodes</code>, the number of leaf nodes contributed by that particular move.</p>
+            <p>The output formats the root move in coordinate notation. <code>String.fromCharCode(97 + (move[0] &amp; 7))</code> converts the source file index to a letter from <code>a</code> to <code>h</code>, while <code>8 - (move[0] &gt;&gt; 4)</code> converts the rank index to a chessboard rank. The same calculations are applied to the destination square. The move number is padded with an extra space for single-digit entries so the results line up in the console.</p>
+            <p>After all root moves have been processed, the function appends the requested depth, total node count, and elapsed time in milliseconds to <code>resultString</code>, then prints the summary. The elapsed time is calculated by subtracting the recorded start time from <code>Date.now()</code>.</p>
+            <div class="note">
+            <div class="note-title">Why save the board differently here?</div>
+            <p>The recursive driver copies the 128 board entries into an array, while the root test uses <code>JSON.stringify()</code> and <code>JSON.parse()</code> to save and restore the board. Both approaches are intended to preserve the board state, but they are not equally efficient. JSON serialization adds overhead, so for a performance-focused test we could use the same array-copy approach in both functions. Here, the more important point is that the root test needs to restore the position before moving on to the next root move.</p>
+            </div>
+            <h2>Running the Test</h2>
+            <p>The final comment, <code>//perftTest(4); ui();</code>, shows how to invoke the test.</p>
+            <p>For a standard initial chess position, widely used reference counts are 20 nodes at depth one, 400 at depth two, 8,902 at depth three, and 197,281 at depth four. Compare our totals against these values using the same initial position and the same definition of legal moves. If the total differs, examine the per-move counts to narrow down which branch first diverges. Special moves deserve particular attention: castling, en passant, promotion, and moves that leave the king in check are common sources of errors.</p>
+            <p>One final detail is worth remembering: perft is a correctness test first and a speed test second. The time reported by this code can help us measure changes, but it is affected by the runtime environment and by the overhead of copying and restoring state. Correct node counts are the essential result; speed comparisons become meaningful only when the same positions, depth, and testing conditions are used.</p>
+            <h2>Project Summary</h2>
+            <p>We have built a compact chess engine in JavaScript, designed to fit alongside its interface in a single HTML file. The board uses the 0x88 representation to make square-boundary checks simple, while compact piece codes, movement offsets, material values, and piece-square tables keep the core data structures small. Our move generator handles candidate moves and special chess rules, and the search function uses negamax with alpha-beta pruning, quiescence search, principal-variation move ordering, and a node-based stopping mechanism to find a playable move.</p>
+            <p>We have also seen how careful reuse of global state and compact bit masks can reduce duplicated logic, especially when updating castling rights and testing move legality. Finally, perft testing gives us a practical way to validate move generation by comparing generated node counts with known reference results and examining individual root moves when something goes wrong.</p>
+            <p>The goal was never to reproduce every feature of a large tournament engine. It was to understand the essential parts of a chess engine, see how those parts fit together, and make deliberate trade-offs between code size, clarity, speed, and strength. With search, a user interface, and a repeatable testing method in place, our small engine is not just a program that can play chess—it is a project we can measure, debug, and continue improving.</p>
+        </article>
+    </main>
+</body>
+</html>
